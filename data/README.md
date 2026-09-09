@@ -137,6 +137,26 @@ ODPT の路線名と N02 の路線名の対応（人が確認した分）。20�
 | `temp_only_rail` | 鉄道が期間限定にしか無い（2027-03-13 に失われる） |
 | `temp_only_bus` | バスが期間限定にしか無い |
 
+### `history.csv`
+
+測定日ごとの主要な数字。時間軸を作るための積み上げ。1行。
+
+| 列 | 意味 |
+|---|---|
+| `date` | 測定日 |
+| `rail_odpt` | 鉄道路線のうち ODPT に通年であるもの。以下 temp／outside／none |
+| `rail_total` | 鉄道路線の母集団 |
+| `bus_odpt` | バス停のうち ODPT に通年であるもの。以下同じ |
+| `bus_total` | バス停の母集団 |
+| `muni_with_bus` | バス停がある市区町村の数 |
+| `muni_no_bus_data` | うちオープンデータが1件も無い市区町村 |
+| `feeds` | GTFSデータリポジトリのフィード数 |
+| `feeds_discontinued` | うち廃止 |
+| `feeds_expired` | うち有効期限が過ぎたもの |
+| `tour_data` | 観光エリアのうち時刻表あり |
+| `tour_gap` | 同 時刻表なし（停留所はある） |
+| `tour_none` | 同 停留所なし |
+
 ### `bus_coverage.csv`
 
 バスの人口カバー率（バス停から300m以内）。5行。
