@@ -1,0 +1,21 @@
+odpt_railway,odpt_title,n02_operator,n02_line,reason
+JR-East.ChuoTatsunoBranch,中央本線辰野支線,東日本旅客鉄道,中央線,N02は支線を本線に含める
+JR-East.OuYamagata,山形線,東日本旅客鉄道,奥羽線,愛称。奥羽本線 福島〜新庄 の区間
+JR-East.SensekiTohoku,仙石東北ライン,東日本旅客鉄道,仙石線,直通運転の愛称。仙石線と東北線にまたがる
+JR-East.SensekiTohoku,仙石東北ライン,東日本旅客鉄道,東北線,同上
+JR-East.SuigunBranch,水郡線支線,東日本旅客鉄道,水郡線,N02は支線を本線に含める
+JR-East.KeihinTohokuNegishi,京浜東北線・根岸線,東日本旅客鉄道,東北線,運転系統の名称。N02は線路名称で分ける
+JR-East.KeihinTohokuNegishi,京浜東北線・根岸線,東日本旅客鉄道,根岸線,同上
+JR-East.YamagataShinkansen,山形新幹線,東日本旅客鉄道,奥羽線,ミニ新幹線。N02では在来線の奥羽線
+JR-East.AkitaShinkansen,秋田新幹線,東日本旅客鉄道,田沢湖線,ミニ新幹線。N02では在来線
+JR-East.AkitaShinkansen,秋田新幹線,東日本旅客鉄道,奥羽線,同上
+JR-Shikoku.SetoOhashi,瀬戸大橋線,四国旅客鉄道,本四備讃線,愛称。本四備讃線と予讃線にまたがる
+JR-Shikoku.SetoOhashi,瀬戸大橋線,四国旅客鉄道,予讃線,同上
+Fujikyu.Fujikyu,富士急行線,富士山麓電気鉄道,大月線,社名変更。N02は大月線と河口湖線に分ける
+Fujikyu.Fujikyu,富士急行線,富士山麓電気鉄道,河口湖線,同上
+Keisei.Main,京成本線,京成電鉄,本線,ODPTは社名を冠し、N02は冠さない
+Keisei.NaritaSkyAccess,成田スカイアクセス線,京成電鉄,成田空港線,愛称
+Keisei.Matsudo,松戸線,新京成電鉄,新京成線,2025年に新京成電鉄が京成へ統合。N02-24はまだ統合前の表記
+OdakyuHakone.HakoneTozan,箱根登山線,小田急箱根,鉄道線,ODPTは愛称、N02は線路名称
+SendaiMunicipal.Namboku,南北線,仙台市,南北線,運営会社の表記が 仙台市交通局 と 仙台市 で違う
+SendaiMunicipal.Tozai,東西線,仙台市,東西線,同上

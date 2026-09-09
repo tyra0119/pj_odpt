@@ -1,0 +1,574 @@
+<title>交通データ白地図</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --ink:#131B23; --ink-2:#4E5C69; --ink-3:#7C8A97;
+  --rule:#D3DBE2; --rule-2:#E5EBEF;
+  --accent:#0C7488; --accent-wash:#DDEEF2;
+  --lit:#12809E; --temp:#A96A0C; --void:#8D9BA7;
+  /* 夜景パネル: 両テーマで固定 */
+  --night:#0A1219; --night-2:#101C25; --night-rule:#1E2C37;
+  --night-ink:#D9E5EC; --night-ink-2:#7A8D9C;
+  --night-lit:#46D6F2; --night-temp:#F3B85F; --night-void:#26333E;
+  --measure:41rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+    --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+    --rule:#26333D; --rule-2:#1D2831;
+    --accent:#4FC3DC; --accent-wash:#14313A;
+    --lit:#46D6F2; --temp:#E9AE5E; --void:#67757F;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+  --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+  --rule:#26333D; --rule-2:#1D2831;
+  --accent:#4FC3DC; --accent-wash:#14313A;
+  --lit:#46D6F2; --temp:#E9AE5E; --void:#67757F;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--measure); margin:0 auto; padding:0 1.5rem}
+.bleed{background:var(--night); color:var(--night-ink)}
+
+/* 見出し */
+h1,h2,h3{font-family:"Zen Old Mincho",serif; text-wrap:balance; letter-spacing:.02em}
+h1{font-size:clamp(2.4rem,7vw,3.4rem); font-weight:900; line-height:1.25; margin:.2em 0 .35em}
+h2{font-size:1.55rem; font-weight:700; line-height:1.5; margin:0 0 .6rem}
+h3{font-size:1.05rem; font-weight:700; margin:2.2rem 0 .4rem; color:var(--ink)}
+p{margin:0 0 1.1em}
+a{color:var(--accent)}
+strong{font-weight:700}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+
+/* ヘッダ */
+header{padding:4.5rem 0 3rem; border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .2rem
+}
+.sub{font-size:.8rem; color:var(--ink-3); font-family:"IBM Plex Mono",monospace; margin:0 0 2rem}
+.lede{font-size:1.12rem; color:var(--ink-2); max-width:36rem}
+.lede em{font-style:normal; color:var(--ink); font-weight:700; box-shadow:inset 0 -.5em 0 var(--accent-wash)}
+
+/* 数値の帯 */
+.figures{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1.6rem; margin-top:2.6rem}
+.figure .n{font-family:"IBM Plex Mono",monospace; font-size:2.1rem; font-weight:600;
+  font-variant-numeric:tabular-nums; line-height:1.1; color:var(--accent)}
+.figure .n small{font-size:.9rem; font-weight:400; color:var(--ink-3); margin-left:.15em}
+.figure .k{font-size:.78rem; color:var(--ink-2); line-height:1.6; margin-top:.35rem}
+
+/* セクション */
+section{padding:3.2rem 0; border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+.sec-no{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.14em;
+  color:var(--ink-3); display:block; margin-bottom:.5rem
+}
+
+/* 表 */
+.tablewrap{overflow-x:auto; margin:1.4rem 0}
+table{border-collapse:collapse; width:100%; font-size:.86rem; min-width:26rem}
+caption{text-align:left; font-size:.76rem; color:var(--ink-3); padding-bottom:.5rem}
+th,td{padding:.55rem .7rem; text-align:left; border-bottom:1px solid var(--rule-2); vertical-align:top}
+thead th{
+  font-size:.7rem; letter-spacing:.08em; color:var(--ink-3); font-weight:500;
+  border-bottom:1px solid var(--rule); white-space:nowrap
+}
+td.num,th.num{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+.hi{color:var(--accent); font-weight:600}
+.zero{color:var(--temp); font-weight:600}
+
+/* 注記 */
+.note{
+  font-size:.84rem; color:var(--ink-2); border-left:2px solid var(--accent);
+  padding:.1rem 0 .1rem 1rem; margin:1.4rem 0
+}
+.note p:last-child{margin-bottom:0}
+
+/* 実装済みの成果物 */
+.ships{list-style:none; margin:1.5rem 0 0; padding:0; display:grid; gap:.6rem}
+.ships li{border-top:1px solid var(--rule-2); padding-top:.6rem}
+.ships li:first-child{border-top:0; padding-top:0}
+.ships b{font-weight:700; margin-right:.6rem}
+.ships span{color:var(--ink-2); font-size:.85rem}
+
+/* 夜景デモ */
+.demo{padding:3.4rem 0 3.8rem}
+.demo h2{color:var(--night-ink)}
+.demo p{color:var(--night-ink-2); font-size:.92rem}
+.demo .sec-no{color:var(--night-ink-2)}
+.panel{
+  background:var(--night-2); border:1px solid var(--night-rule); border-radius:3px;
+  padding:1.5rem 1.4rem 1.3rem; margin-top:1.8rem
+}
+.readout{display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; margin-bottom:1.2rem}
+#count{
+  font-family:"IBM Plex Mono",monospace; font-size:2.6rem; font-weight:600;
+  font-variant-numeric:tabular-nums; color:var(--night-lit); line-height:1;
+  transition:color .5s ease
+}
+#count.off{color:var(--night-ink-2)}
+.readout .unit{font-size:.8rem; color:var(--night-ink-2)}
+#grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(11px,1fr)); gap:5px; min-height:96px}
+.dot{
+  width:100%; aspect-ratio:1; border-radius:50%; background:var(--night-lit);
+  transition:background-color .45s ease, opacity .45s ease
+}
+.dot.t{background:var(--night-temp)}
+.dot.t.out{background:var(--night-void); opacity:.55}
+button#toggle{
+  font-family:"Zen Kaku Gothic New",sans-serif; font-size:.86rem; font-weight:500;
+  background:transparent; color:var(--night-ink); border:1px solid var(--night-rule);
+  border-radius:2px; padding:.6rem 1.1rem; cursor:pointer; margin-top:1.3rem;
+  transition:border-color .2s, color .2s
+}
+button#toggle:hover{border-color:var(--night-lit); color:var(--night-lit)}
+button#toggle:focus-visible{outline:2px solid var(--night-lit); outline-offset:2px}
+.legend{display:flex; gap:1.4rem; flex-wrap:wrap; margin-top:1.4rem; font-size:.78rem; color:var(--night-ink-2)}
+.legend span{display:flex; align-items:center; gap:.45rem}
+.legend i{width:9px; height:9px; border-radius:50%; display:block}
+
+/* 図 */
+figure{margin:1.8rem 0 1.2rem}
+figure svg{width:100%; height:auto; display:block}
+figcaption{font-size:.76rem; color:var(--ink-3); margin-top:.5rem}
+
+/* 人口の帯 */
+.popbar{margin:1.6rem 0 .9rem}
+.popbar svg{width:100%; height:auto; display:block}
+.poplist{display:grid; gap:.1rem; margin:0 0 1.2rem}
+.poplist div{
+  display:grid; grid-template-columns:.7rem 1fr auto auto; gap:.6rem; align-items:baseline;
+  padding:.4rem 0; border-bottom:1px solid var(--rule-2); font-size:.84rem;
+}
+.poplist div:last-child{border-bottom:0}
+.poplist i{width:.7rem; height:.7rem; border-radius:2px; display:block; align-self:center}
+.poplist b{font-family:"IBM Plex Mono",monospace; font-weight:600; font-variant-numeric:tabular-nums}
+.poplist em{
+  font-style:normal; font-family:"IBM Plex Mono",monospace; color:var(--ink-3);
+  font-variant-numeric:tabular-nums; min-width:3.4rem; text-align:right;
+}
+
+/* 所在の定義 */
+dl.loc{margin:1.2rem 0 1.4rem; display:grid; gap:.1rem}
+dl.loc div{
+  display:grid; grid-template-columns:9.5rem 1fr; gap:.7rem; padding:.45rem 0;
+  border-bottom:1px solid var(--night-rule); font-size:.86rem;
+}
+dl.loc div:last-child{border-bottom:0}
+dl.loc dt{font-weight:700}
+dl.loc dd{margin:0; color:var(--night-ink-2)}
+@media (max-width:560px){ dl.loc div{grid-template-columns:1fr; gap:.15rem} }
+
+/* 分類リスト */
+dl.abc{margin:1.4rem 0; display:grid; gap:.1rem}
+dl.abc div{display:grid; grid-template-columns:1.6rem 1fr; gap:.7rem; padding:.7rem 0; border-bottom:1px solid var(--rule-2)}
+dl.abc div:last-child{border-bottom:0}
+dl.abc dt{font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--accent)}
+dl.abc dd{margin:0; font-size:.9rem}
+dl.abc dd b{display:block; font-weight:700; font-size:.95rem}
+dl.abc dd span{color:var(--ink-2)}
+
+/* 工程 */
+ol.plan{list-style:none; padding:0; margin:1.4rem 0}
+ol.plan li{display:grid; grid-template-columns:5.5rem 1fr; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--rule-2); font-size:.9rem}
+ol.plan li:last-child{border-bottom:0}
+ol.plan .when{font-family:"IBM Plex Mono",monospace; font-size:.78rem; color:var(--ink-3); padding-top:.15em}
+ol.plan li.due .when{color:var(--accent); font-weight:600}
+ol.plan li.due{font-weight:700}
+
+footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:1.9}
+
+@media (prefers-reduced-motion:reduce){*{transition:none !important; animation:none !important}}
+@media (max-width:560px){
+  ol.plan li,dl.abc div{grid-template-columns:1fr; gap:.25rem}
+  .figures{gap:1.2rem}
+}
+</style>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">公共交通オープンデータチャレンジ2026 応募企画</p>
+    <h1>交通データ白地図</h1>
+    <p class="sub">2026-09-09 案 ／ 数値はすべて同日の実測</p>
+    <p class="lede">
+      日本地図を、<em>データが有る所だけが光る夜景</em>として描く。
+      鉄道・バス・フェリー・デマンド交通・航空・シェアサイクルの6モードについて、
+      どこが点いていて、どこが消えているのか。そして消えている場所は
+      <em>なぜ暗いのか</em>を答えられる地図をつくる。
+    </p>
+    <div class="figures">
+      <div class="figure">
+        <div class="n">12<small>者</small></div>
+        <div class="k">ODPT 129組織と gtfs-data.jp 438事業者の重なり</div>
+      </div>
+      <div class="figure">
+        <div class="n">64<small>%</small></div>
+        <div class="k">日本の鉄道路線のうちオープンデータが無いもの</div>
+      </div>
+      <div class="figure">
+        <div class="n">19.0<small>%</small></div>
+        <div class="k">鉄道データが「ODPT」にあり通年で使える国民の割合</div>
+      </div>
+      <div class="figure">
+        <div class="n">770<small>万人</small></div>
+        <div class="k">2027-03-13 に鉄道情報が消える人の数</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <span class="sec-no">01 — 着想</span>
+  <h2>塗り分けではなく、消灯を主役にする</h2>
+  <p>
+    「カバー率85%」と言われても何も感じない。だが真っ暗な地図に灯りが点々と散っている絵は、
+    一目で伝わる。この企画は発想を反転させ、データが無いことのほうを描く。
+  </p>
+  <p>
+    そのためには「本来あるべき全体」——分母が要る。公開されているデータを並べるのは誰でもできるが、
+    無いものを描くには全事業者・全路線の母集団を先に定義しなければならない。
+    そこがこの企画の技術的な心臓部になる。
+  </p>
+  <div class="note">
+    <p>なお「無い」は3種類ある。この区別を守ることが、単なるカバレッジ地図との決定的な差になる。</p>
+  </div>
+  <dl class="abc">
+    <div><dt>A</dt><dd><b>集約の空白</b><span>ODPTには無いが、gtfs-data.jp や事業者の自社サイトには存在する</span></dd></div>
+    <div><dt>B</dt><dd><b>真のデータ空白</b><span>どこにも機械可読データが無い。PDF時刻表のみ</span></dd></div>
+    <div><dt>C</dt><dd><b>交通空白地域</b><span>そもそも交通事業が存在しない。データの問題ではない</span></dd></div>
+  </dl>
+  <p>
+    B と C を混ぜないこと。事業者に対して事実と異なる表示をすれば、企画の信頼性は一発で壊れる。
+    判定できないものには「未確認」を必ず持たせる。
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">02 — 検証</span>
+  <h2>実際に叩いて分かった三つの事実</h2>
+  <p>企画の前提が成立するかを先に確かめた。結果、想定していなかった構造が2つ見つかった。</p>
+
+  <h3>① 全体像を一望できる場所が、現時点で存在しない</h3>
+  <p>
+    ODPT CKAN の129組織と gtfs-data.jp の438事業者を突合したところ、一致はわずか12者だった。
+    京都バス・伊予鉄バス・東急バス・小田急バス・神奈川中央交通は ODPT にのみ登録され、
+    gtfs-data.jp には1件も存在しない。逆に地方の420事業者あまりは ODPT に居ない。
+    事業者名での照合と、10万件の停留所座標を使った照合という独立した2つの手法が、
+    同じ結論を出している。
+  </p>
+  <figure>
+    <svg viewBox="0 0 560 285" role="img" aria-label="gtfs-data.jp 438事業者と ODPT 129組織はほぼ接するだけで、重なりは12者しかない">
+      <circle cx="250" cy="120" r="95" fill="var(--accent-wash)" stroke="var(--accent)" stroke-width="1.25"></circle>
+      <circle cx="392" cy="120" r="51.6" fill="var(--accent-wash)" fill-opacity="0.9" stroke="var(--accent)" stroke-width="1.25"></circle>
+      <text x="250" y="112" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono, monospace" font-size="26" font-weight="600">438</text>
+      <text x="250" y="134" text-anchor="middle" fill="var(--ink-2)" font-family="Zen Kaku Gothic New, sans-serif" font-size="12">gtfs-data.jp 事業者</text>
+      <text x="392" y="116" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono, monospace" font-size="19" font-weight="600">129</text>
+      <text x="392" y="134" text-anchor="middle" fill="var(--ink-2)" font-family="Zen Kaku Gothic New, sans-serif" font-size="11">ODPT 組織</text>
+      <circle cx="342.7" cy="120" r="3.2" fill="var(--accent)"></circle>
+      <path d="M342.7 141 L342.7 240" stroke="var(--ink-3)" stroke-width="1" fill="none"></path>
+      <text x="342.7" y="262" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600">一致 12者</text>
+    </svg>
+    <figcaption>円の面積は事業者数に比例。両者はほぼ接しているだけで、実質的に別の世界を記録している。</figcaption>
+  </figure>
+
+  <h3>② ODPTの2つのAPIは、上位互換ではなく別カタログだった</h3>
+  <p>
+    センター用トークンとチャレンジ2026専用トークンは、単なる権限差ではなかった。
+    ホストが異なり（<span class="mono">api.odpt.org</span> と
+    <span class="mono">api-challenge.odpt.org</span>）、内容は包含関係にない。
+  </p>
+  <div class="tablewrap">
+    <table>
+      <caption>2026-09-09 実測。「センターのみ」は通年で使え、「チャレンジのみ」は 2027-03-12 で消える。</caption>
+      <thead><tr>
+        <th>データ種別</th><th class="num">センター</th><th class="num">チャレンジ</th>
+        <th class="num">チャレンジのみ</th><th class="num">センターのみ</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>事業者</td><td class="num">42</td><td class="num">189</td><td class="num hi">155</td><td class="num">8</td></tr>
+        <tr><td>鉄道路線</td><td class="num">94</td><td class="num">214</td><td class="num hi">121</td><td class="num">1</td></tr>
+        <tr><td>列車位置 <span class="mono">RT</span></td><td class="num">118</td><td class="num">521</td><td class="num hi">519</td><td class="num">118</td></tr>
+        <tr><td>運行情報 <span class="mono">RT</span></td><td class="num">21</td><td class="num">121</td><td class="num hi">121</td><td class="num">21</td></tr>
+        <tr><td>バス車両位置 <span class="mono">RT</span></td><td class="num">1,218</td><td class="num zero">0</td><td class="num">0</td><td class="num hi">1,218</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    リアルタイム系はほぼ完全に排他である。列車位置は「センターのみ118／チャレンジのみ519」、
+    バス車両位置に至ってはチャレンジ側がゼロで、方向が逆を向いている。つまり——
+  </p>
+  <div class="note">
+    <p><strong>開発者は2つのトークンを持って初めて全体が見え、しかしどちらか一方だけでは実サービスを出せない。</strong></p>
+  </div>
+  <p>
+    鉄道路線を持つ52事業者のうち、27事業者は通年APIに一切登場しない。
+    銚子電鉄、江ノ島電鉄、秩父鉄道、宇都宮ライトレール、いすみ鉄道、わたらせ渓谷鐵道、
+    JR西日本、JR四国——いずれもコンテスト期間中しか地図に描けない。
+  </p>
+
+  <h3>③ 名寄せは実現できる。ただし文字列類似度は使えない</h3>
+  <p>
+    事業者名の類似度マッチングを試したところ、候補7件がすべて誤検出だった。
+    「村山市／東村山市」「津市／唐津市」「東濃鉄道／東武鉄道」。
+    日本の自治体名・事業者名は編集距離が近すぎ、スコアは誤接続しか生まない。
+  </p>
+  <p>
+    代わりに <span class="mono">(都道府県, 市区町村名)</span> の完全一致だけで、
+    gtfs-data.jp の438者中356者（81.3%）を全国地方公共団体コードへ決定的に結合できた。
+    外れた自治体名は実質1件である。
+  </p>
+  <p>
+    さらに有効だったのが、<strong>停留所の座標による照合</strong>だった。
+    gtfs-data.jp の10万件と ODPT 配布 GTFS の5万件を半径50mで突合すると、
+    一致率の分布に中間が存在しない——98.9%以上が10件、11.7%以下が91件で、その間が空白になる。
+    閾値の設定に迷う余地がない。
+  </p>
+  <div class="note">
+    <p>
+      この方法は「国立市道路交通課／国立市」「三豊市（香川県）／三豊市」のように、
+      名前では外れる同一事業者を拾う。一方で GTFS を持たない事業者は座標が無いため拾えず、
+      七ヶ浜町は名前照合でしか見つからなかった。<strong>両方を走らせて和を取る。</strong>
+    </p>
+  </div>
+  <p>
+    低い一致率の帯も無駄ではなかった。西武バスと軽井沢町の192組は誤検出ではなく、
+    実在する<strong>停留所の共用</strong>である（誤差0.4〜2.2m、159組は停留所名も一致）。
+    ある市区町村が「データあり」に見えても、それはコミュニティバスの GTFS だけで、
+    同じ停留所を通る幹線の民間路線にはデータが無い——という状態がありうる。
+    カバレッジは停留所単位で見ないと取り違える。
+  </p>
+</section>
+
+<div class="bleed">
+  <section class="wrap demo">
+    <span class="sec-no">03 — 見せ方</span>
+    <h2>地図に「存続」の軸を入れる</h2>
+    <p>
+      凡例の軸は「<strong style="color:var(--night-ink)">データの所在</strong>」にする。
+      良し悪しではなく、どこにあるかを言う。
+    </p>
+    <dl class="loc">
+      <div><dt style="color:var(--night-lit)">ODPT</dt>
+        <dd>ODPT にあり、通年で使える</dd></div>
+      <div><dt style="color:var(--night-temp)">ODPT（期間限定）</dt>
+        <dd>ODPT にあるが 2027-03-13 で終了する</dd></div>
+      <div><dt style="color:#8E7BE0">ODPT外</dt>
+        <dd>ODPT には無いが、gtfs-data.jp 等にはある</dd></div>
+      <div><dt style="color:var(--night-ink-2)">なし</dt>
+        <dd>確認できた範囲では、どこにも機械可読なデータが無い</dd></div>
+    </dl>
+    <p>
+      そして地図の上部にトグルを1つ置く——コンテスト終了日、2027年3月13日。
+    </p>
+    <div class="panel">
+      <div class="readout">
+        <span id="count">192</span>
+        <span class="unit">本 ／ ODPT にデータがある鉄道路線</span>
+      </div>
+      <div id="grid" aria-hidden="true"></div>
+      <div class="legend">
+        <span><i style="background:var(--night-lit)"></i>ODPT 85</span>
+        <span><i style="background:var(--night-temp)"></i>ODPT（期間限定） 107</span>
+      </div>
+      <button id="toggle" type="button" aria-describedby="count">2027年3月13日にする</button>
+    </div>
+    <p style="margin-top:1.6rem">
+      107本が消え、リアルタイムの脈動が止まる。カバー率を数字で語るより、はるかに速く伝わる。
+    </p>
+    <p>
+      「消えても、どこか別の場所にデータはあるのでは」——そう考えて確かめた。
+      <strong style="color:var(--night-ink)">107路線のうち、gtfs-data.jp にもデータがあるのは1路線だけだった</strong>
+      （JR弥彦線。燕市が出しているフィードに含まれる）。残る106路線は、その日を境に
+      機械可読なデータが日本のどこにも無くなる。
+    </p>
+    <p>
+      これは批判ではない。<strong style="color:var(--night-ink)">通年ライセンスへの移行が進めば、この地図は消えなくなる</strong>——
+      そういうメッセージとして設計する。
+    </p>
+  </section>
+</div>
+
+<section class="wrap">
+  <span class="sec-no">04 — 設計</span>
+  <h2>分母をどう作るか</h2>
+  <p>モードごとに母集団の出所と粒度を決める。ここが全体の労力の中心になる。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>モード</th><th>分母の出所</th><th>粒度</th></tr></thead>
+      <tbody>
+        <tr><td>鉄道</td><td>国土数値情報 N02（全国の路線・駅、事業者名付き）</td><td>路線・駅</td></tr>
+        <tr><td>バス</td><td>国土数値情報 P11 ＋ 全1,741市区町村</td><td>市区町村・事業者</td></tr>
+        <tr><td>フェリー</td><td>国交省 定期旅客航路事業者一覧</td><td>航路</td></tr>
+        <tr><td>デマンド交通</td><td>自家用有償旅客運送 登録一覧</td><td>市区町村</td></tr>
+        <tr><td>航空</td><td>全国97空港・定期便就航路線</td><td>空港</td></tr>
+        <tr><td>シェアサイクル</td><td>国交省 シェアサイクル導入状況調査 ＋ GBFS</td><td>市区町村・ポート</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>指標は面積ではなく人口で出す</h3>
+  <p>
+    500mメッシュ人口（国土数値情報・全国47万メッシュ）で重み付けして、鉄道について実際に算出した。
+    駅から1km以内を駅勢圏とし、その人口を最も条件の良い路線の状態へ配分している。
+  </p>
+  <figure class="popbar">
+    <svg viewBox="0 0 700 46" role="img" aria-label="2020年の全国人口1億2,532万人の内訳。ODPT 2,386万人、ODPT（期間限定）770万人、ODPT外74万人、なし3,078万人、駅勢圏外6,225万人">
+      <rect x="0"     y="6" width="133.3" height="34" fill="var(--lit)"></rect>
+      <rect x="133.3" y="6" width="43.0"  height="34" fill="var(--temp)"></rect>
+      <rect x="176.3" y="6" width="4.1"   height="34" fill="#7A6BC4"></rect>
+      <rect x="180.4" y="6" width="171.9" height="34" fill="var(--void)"></rect>
+      <rect x="352.3" y="6" width="347.7" height="34" fill="var(--rule)"></rect>
+    </svg>
+    <figcaption>2020年推計人口 1億2,532万人の内訳。帯の幅は人口に比例。</figcaption>
+  </figure>
+  <div class="poplist">
+    <div><i style="background:var(--lit)"></i><span>ODPT</span><b>2,386万人</b><em>19.0%</em></div>
+    <div><i style="background:var(--temp)"></i><span>ODPT（期間限定・2027-03-12まで）</span><b>770万人</b><em>6.1%</em></div>
+    <div><i style="background:#7A6BC4"></i><span>ODPT外</span><b>74万人</b><em>0.6%</em></div>
+    <div><i style="background:var(--void)"></i><span>なし</span><b>3,078万人</b><em>24.6%</em></div>
+    <div><i style="background:var(--rule)"></i><span>駅勢圏外（駅から1km以上）</span><b>6,225万人</b><em>49.7%</em></div>
+  </div>
+  <p>
+    読み取れることが3つある。まず、<strong>日本人の半数は鉄道駅から1km以上離れて暮らしている</strong>。
+    次に、駅の近くに住んでいても<strong>その半数（48.8%）は路線のデータが無い</strong>。
+    そして通年で使えるデータの恩恵が届くのは、<strong>国民の19.0%——5人に1人</strong>にとどまる。
+  </p>
+  <div class="note">
+    <p>
+      そして 2027年3月13日、<strong>770万人分の鉄道情報が消える</strong>。
+      千葉県の人口より多い。駅勢圏人口の12.2%にあたる。
+    </p>
+  </div>
+
+  <h3>見て終わりにしない</h3>
+  <p>
+    地図上で「なし」の路線・停留所にカーソルを合わせると、その事業者あての
+    公開依頼文がその場で組み上がり、ひと押しでコピーできる。
+    可視化を運動に変える導線を、閲覧のすぐ隣に置いた。
+  </p>
+  <p>
+    さらに、算出したカバレッジデータ自体をオープンデータとして公開している。
+    <strong>オープンデータを使うアプリではなく、オープンデータを増やすアプリ</strong>という立ち位置を取る。
+    副産物の事業者名寄せ辞書——ODPT / gtfs-data.jp / 国土数値情報 の対応表——は、
+    この界隈が共通で欲しがっている資産でもある。ODPT CKAN への登録も申請する。
+  </p>
+  <ul class="ships">
+    <li><b><a href="https://tyra0119.github.io/pj_odpt/map.html">交通データ夜景図</a></b><span>6モードを1枚に重ねた地図。依頼文のコピー導線つき</span></li>
+    <li><b><a href="https://tyra0119.github.io/pj_odpt/data/">カバレッジデータ</a></b><span>判定結果5ファイルを CC BY 4.0 で公開。<span class="mono">datapackage.json</span> 同梱</span></li>
+    <li><b><a href="https://tyra0119.github.io/pj_odpt/data/operators_v0.csv">事業者名寄せ辞書 v0</a></b><span>717事業者。3レジストリの対応表を、根拠と要確認フラグつきで</span></li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">05 — 位置づけ</span>
+  <h2>先行事例との違い</h2>
+  <p>
+    GTFS の公開状況を地図化した先行事例はある。西澤明氏の「GTFSオープンデータマップ」、
+    T.Shimada&#39;s Data Lab. の公開データ一覧と年度別統計。いずれも価値の高い仕事だが、
+    <strong>対象はバス／GTFS に限られる</strong>。
+  </p>
+  <p>
+    6モード横断でもなく、ODPT 登録の有無も、ライセンスによる実用可否も扱っていない。
+    本企画が埋めるのはそこである。
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">06 — 工程</span>
+  <h2>締切までの4か月</h2>
+  <ol class="plan">
+    <li><span class="when">2026-09</span><span>分母データの収集と名寄せ辞書。最優先。<span style="color:var(--ink-3)">（実現性検証は完了）</span></span></li>
+    <li><span class="when">2026-10</span><span>バス＋鉄道の2モードで地図 MVP を完成させる</span></li>
+    <li><span class="when">2026-11</span><span>残り4モード、時間軸スライダー、人口カバー率</span></li>
+    <li><span class="when">2026-12</span><span>UI 磨き込み、ODPT CKAN への登録申請<span style="color:var(--ink-3)">（アクション導線とカバレッジデータ公開は前倒しで完了）</span></span></li>
+    <li class="due"><span class="when">2027-01-11</span><span>応募締切（23:59 JST）</span></li>
+  </ol>
+  <p>
+    技術構成は静的で組める。Python + GeoPandas でバッチ集計し、PMTiles / GeoJSON を生成、
+    MapLibre GL JS + deck.gl で描画、GitHub Actions で日次更新。サーバ費用はゼロで済む。
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">07 — リスク</span>
+  <h2>いちばん弱いところ</h2>
+  <p>
+    <strong>分母の網羅性</strong>が最大の弱点になる。国土数値情報は更新が遅く、バス路線データは特に古い。
+    対策は、推定値であることを明示したうえで、算出データも GitHub で公開し、
+    Issue / PR で市民が修正できる構造にすること。弱点を参加型プロジェクトという性質に反転させる。
+  </p>
+  <p>
+    もうひとつ。「gtfs-data.jp にフィードが0件の府県が7つある」といった観測は、
+    事業者が自社サイトで公開しているだけの可能性が高い。断定表示は誤った批判になるため、
+    A / B / C の分類と「未確認」ステータスを厳格に守る。
+  </p>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>
+    出典と実測日——ODPT データカタログ（<span class="mono">ckan.odpt.org</span>）、
+    ODPT API v4（<span class="mono">api.odpt.org</span> / <span class="mono">api-challenge.odpt.org</span>）、
+    GTFS データリポジトリ（<span class="mono">api.gtfs-data.jp/v2/feeds</span>）、
+    総務省 全国地方公共団体コード。すべて 2026-09-09 取得。<br>
+    検証スクリプトは <span class="mono">tools/</span> に格納。
+    <span class="mono">odpt:Station</span> / <span class="mono">BusstopPole</span> /
+    <span class="mono">BusroutePattern</span> は API の暗黙上限（1,000 / 10,000）で
+    打ち切られており、停留所単位の集計には事業者別の分割取得が必要。
+  </p>
+</footer>
+
+<script>
+(function(){
+  var LIT = 85, TEMP = 107, TOTAL = LIT + TEMP;
+  var grid = document.getElementById('grid');
+  var count = document.getElementById('count');
+  var btn = document.getElementById('toggle');
+  if(!grid || !count || !btn){ return; }
+
+  // 期間限定の路線は全国に散在しているので、決定論的に混ぜて配置する
+  var temps = {};
+  var step = TOTAL / TEMP, acc = 0.37, placed = 0, i;
+  for(i = 0; i < TEMP; i++){
+    var idx = Math.min(TOTAL - 1, Math.round(acc));
+    if(!temps[idx]){ temps[idx] = true; placed++; }
+    acc += step;
+  }
+  // 丸めの衝突ぶんを埋めて必ず121個にする
+  for(i = 0; i < TOTAL && placed < TEMP; i++){
+    if(!temps[i]){ temps[i] = true; placed++; }
+  }
+
+  var frag = document.createDocumentFragment();
+  for(i = 0; i < TOTAL; i++){
+    var d = document.createElement('span');
+    d.className = temps[i] ? 'dot t' : 'dot';
+    frag.appendChild(d);
+  }
+  grid.appendChild(frag);
+
+  var after = false;
+  btn.addEventListener('click', function(){
+    after = !after;
+    var dots = grid.querySelectorAll('.dot.t');
+    for(var j = 0; j < dots.length; j++){ dots[j].classList.toggle('out', after); }
+    count.textContent = after ? String(LIT) : String(TOTAL);
+    count.classList.toggle('off', after);
+    btn.textContent = after ? '2026年9月9日に戻す' : '2027年3月13日にする';
+  });
+})();
+</script>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カバレッジデータ — 交通データ白地図</title>
+<meta name="description" content="日本の公共交通オープンデータがどこにあるかを、全国の母集団に対して集計したもの。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --ink:#131B23; --ink-2:#4E5C69; --ink-3:#7C8A97;
+  --rule:#D3DBE2; --rule-2:#E5EBEF; --accent:#0C7488;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+    --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+    --rule:#26333D; --rule-2:#1D2831; --accent:#4FC3DC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+  --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+  --rule:#26333D; --rule-2:#1D2831; --accent:#4FC3DC;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:15px; line-height:1.85; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:47rem; margin:0 auto; padding:0 1.4rem}
+h1,h2{font-family:"Zen Old Mincho",serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(1.9rem,6vw,2.6rem); font-weight:900; line-height:1.3}
+h2{font-size:1.15rem; font-weight:700; margin:2.8rem 0 .8rem}
+p{margin:0 0 1.05em}
+a{color:var(--accent)}
+code.mono,.mono{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums
+}
+code.mono{font-size:.86em; background:var(--surface-2); padding:.1em .35em; border-radius:3px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .3rem
+}
+header{padding:3.6rem 0 2rem; border-bottom:1px solid var(--rule)}
+main{padding-bottom:1rem}
+.tw{overflow-x:auto; margin:0 0 1.2rem}
+table{border-collapse:collapse; width:100%; font-size:.87rem}
+th,td{
+  text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule-2);
+  vertical-align:top
+}
+th{
+  font-weight:600; color:var(--ink-3); font-size:.76rem; letter-spacing:.04em;
+  border-bottom:1px solid var(--rule); white-space:nowrap
+}
+td.n,th.n{text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+.file{border:1px solid var(--rule); background:var(--surface); margin:0 0 .9rem}
+.file>summary{
+  cursor:pointer; padding:.85rem 1.1rem; list-style:none;
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:.7rem
+}
+.file>summary::-webkit-details-marker{display:none}
+.file>summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.file a{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:.92rem}
+.file .d{color:var(--ink-2); font-size:.83rem; flex:1 1 14rem}
+.file .r{color:var(--ink-3); font-size:.78rem; font-family:"IBM Plex Mono",monospace}
+.file .body{padding:0 1.1rem 1rem; border-top:1px solid var(--rule-2)}
+.file .body table{margin-top:.7rem}
+ul{margin:0 0 1.1em; padding-left:1.2rem}
+li{margin-bottom:.4em}
+.lic{border-left:2px solid var(--accent); padding-left:1rem; color:var(--ink-2);
+  font-size:.9rem; margin:1.2rem 0}
+footer{border-top:1px solid var(--rule); margin-top:2.6rem; padding:1.6rem 0 4rem;
+  font-size:.78rem; color:var(--ink-3)}
+</style>
+</head>
+<body>
+<header class="wrap">
+<p class="eyebrow">交通データ白地図</p>
+<h1>カバレッジデータ</h1>
+<p>日本の公共交通オープンデータが<strong>どこにあるか</strong>を、全国の母集団に対して集計したもの。実測日 <strong>2026-09-09</strong>。</p>
+</header>
+<main class="wrap">
+<h2>データの所在</h2>
+<p>この4分類が全ファイル共通の軸である。</p>
+<div class="tw"><table><thead><tr><th>表記</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">通年オープン</code></td><td>ODPT にあり、通年で使える</td></tr><tr><td><code class="mono">期間限定</code></td><td>ODPT にあるが 2027-03-13 で終了する</td></tr><tr><td><code class="mono">ODPT外にあり</code></td><td>ODPT には無いが gtfs-data.jp 等にはある</td></tr><tr><td><code class="mono">データなし</code></td><td>確認できた範囲では、どこにも機械可読なデータが無い</td></tr></tbody></table></div>
+<p>ODPT を先に見て、ODPT に無いものだけを <code class="mono">ODPT外にあり</code> としている。</p>
+<h2>主な結果</h2>
+<div class="tw"><table><thead><tr><th></th><th class="n">ODPT</th><th class="n">期間限定</th><th class="n">ODPT外</th><th class="n">なし</th><th class="n">母集団</th></tr></thead><tbody><tr><td>鉄道（路線）</td><td class="n">85</td><td class="n">107</td><td class="n">24</td><td class="n">381</td><td class="n">597</td></tr><tr><td>バス（停留所）</td><td class="n">29,173</td><td class="n">2,286</td><td class="n">57,589</td><td class="n">189,467</td><td class="n">278,515</td></tr></tbody></table></div>
+<h2>ファイル</h2>
+<details class="file"><summary><a href="railway_coverage.csv">railway_coverage.csv</a><span class="d">鉄道路線ごとのデータの所在</span><span class="r">597行 / 65KB</span></summary><div class="body"><div class="tw"><table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">n02_operator</code></td><td>国土数値情報 N02 の運営会社名</td></tr><tr><td><code class="mono">n02_line</code></td><td>同 路線名</td></tr><tr><td><code class="mono">op_kind</code></td><td>事業者種別（JR新幹線／JR在来線／公営鉄道／民営鉄道／第三セクター）</td></tr><tr><td><code class="mono">kind</code></td><td>鉄道区分（普通鉄道／軌道／モノレール など）</td></tr><tr><td><code class="mono">stations</code></td><td>N02 上の駅数</td></tr><tr><td><code class="mono">segments</code></td><td>N02 上の線分数</td></tr><tr><td><code class="mono">status</code></td><td>データの所在。通年オープン／期間限定／ODPT外にあり／データなし</td></tr><tr><td><code class="mono">status_after</code></td><td>2027-03-13 以降の所在（期間限定が消えたあと）</td></tr><tr><td><code class="mono">odpt_railways</code></td><td>対応する odpt.Railway の ID（複数は | 区切り）</td></tr><tr><td><code class="mono">odpt_operator</code></td><td>対応する odpt.Operator の ID</td></tr><tr><td><code class="mono">gtfs_org</code></td><td>gtfs-data.jp の事業者ID（ODPT外にある場合）</td></tr><tr><td><code class="mono">gtfs_name</code></td><td>同 事業者名</td></tr></tbody></table></div></div></details>
+<details class="file"><summary><a href="operators_v0.csv">operators_v0.csv</a><span class="d">事業者の名寄せ辞書。ODPT・gtfs-data.jp・自治体コードの対応表</span><span class="r">717行 / 51KB</span></summary><div class="body"><div class="tw"><table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">unified_id</code></td><td>統合後のID（クラスタ代表）</td></tr><tr><td><code class="mono">name</code></td><td>代表名</td></tr><tr><td><code class="mono">lg_code</code></td><td>全国地方公共団体コード（6桁）</td></tr><tr><td><code class="mono">pref</code></td><td>都道府県</td></tr><tr><td><code class="mono">city</code></td><td>市区町村</td></tr><tr><td><code class="mono">ckan_orgs</code></td><td>ODPT CKAN の組織slug（| 区切り）</td></tr><tr><td><code class="mono">odpt_operators</code></td><td>odpt.Operator の ID（| 区切り）</td></tr><tr><td><code class="mono">gtfs_orgs</code></td><td>gtfs-data.jp の事業者ID（| 区切り）</td></tr><tr><td><code class="mono">registries</code></td><td>跨っているレジストリ数（1〜3）</td></tr><tr><td><code class="mono">evidence</code></td><td>同一と判断した根拠。lgcode／ckan_url／location／name</td></tr><tr><td><code class="mono">needs_review</code></td><td>人手確認が要るものに yes</td></tr><tr><td><code class="mono">review_reason</code></td><td>その理由</td></tr></tbody></table></div></div></details>
+<details class="file"><summary><a href="railway_alias.csv">railway_alias.csv</a><span class="d">ODPT の路線名と N02 の路線名の対応（人が確認した分）</span><span class="r">20行 / 2KB</span></summary><div class="body"><div class="tw"><table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">odpt_railway</code></td><td>odpt.Railway の ID</td></tr><tr><td><code class="mono">odpt_title</code></td><td>ODPT 上の路線名</td></tr><tr><td><code class="mono">n02_operator</code></td><td>N02 の運営会社名</td></tr><tr><td><code class="mono">n02_line</code></td><td>N02 の路線名</td></tr><tr><td><code class="mono">reason</code></td><td>なぜ食い違うのか</td></tr></tbody></table></div></div></details>
+<details class="file"><summary><a href="bus_coverage.csv">bus_coverage.csv</a><span class="d">バスの人口カバー率（バス停から300m以内）</span><span class="r">5行 / 1KB</span></summary><div class="body"><div class="tw"><table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">category</code></td><td>データの所在、またはバス停勢圏外</td></tr><tr><td><code class="mono">pop_2015</code></td><td>2015年人口（国勢調査）</td></tr><tr><td><code class="mono">pop_2020</code></td><td>2020年人口（推計）</td></tr><tr><td><code class="mono">pop_2050</code></td><td>2050年人口（推計）</td></tr><tr><td><code class="mono">share_2015</code></td><td>全国比(%)</td></tr><tr><td><code class="mono">share_2020</code></td><td>同</td></tr><tr><td><code class="mono">share_2050</code></td><td>同</td></tr></tbody></table></div></div></details>
+<details class="file"><summary><a href="population_coverage.csv">population_coverage.csv</a><span class="d">鉄道の人口カバー率（駅から1km以内）</span><span class="r">6行 / 1KB</span></summary><div class="body"><div class="tw"><table><thead><tr><th>列</th><th>意味</th></tr></thead><tbody><tr><td><code class="mono">category</code></td><td>データの所在、または駅勢圏外</td></tr><tr><td><code class="mono">pop_2015</code></td><td>2015年人口（国勢調査）</td></tr><tr><td><code class="mono">pop_2020</code></td><td>2020年人口（推計）</td></tr><tr><td><code class="mono">pop_2050</code></td><td>2050年人口（推計）</td></tr><tr><td><code class="mono">share_2015</code></td><td>全国比(%)</td></tr><tr><td><code class="mono">share_2020</code></td><td>同</td></tr><tr><td><code class="mono">share_2050</code></td><td>同</td></tr></tbody></table></div></div></details>
+<details class="file"><summary><a href="datapackage.json">datapackage.json</a><span class="d">Frictionless Data Package 形式のメタデータ</span></summary><div class="body"><p style="margin:.9rem 0 0">列の定義・出典・ライセンスを機械可読にしたもの。<a href="README.md">README.md</a> にも同じ内容がある。</p></div></details>
+<h2>出典</h2>
+<div class="tw"><table><thead><tr><th>データ</th><th>提供</th><th>この集計での役割</th></tr></thead><tbody><tr><td>国土数値情報 N02-24（鉄道）</td><td>国土交通省</td><td>鉄道の母集団</td></tr><tr><td>国土数値情報 P11-22（バス停留所）</td><td>国土交通省</td><td>バスの母集団</td></tr><tr><td>国土数値情報 C28-21（空港）</td><td>国土交通省</td><td>航空の母集団</td></tr><tr><td>国土数値情報 C23（海岸線）</td><td>国土交通省</td><td>地図の土台</td></tr><tr><td>国土数値情報 500mメッシュ別将来推計人口</td><td>国土交通省</td><td>人口の重み</td></tr><tr><td>全国地方公共団体コード</td><td>総務省</td><td>自治体の名寄せ</td></tr><tr><td>公共交通オープンデータセンター</td><td>公共交通オープンデータ協議会</td><td>ODPT 側のデータ</td></tr><tr><td>GTFSデータリポジトリ</td><td>gtfs-data.jp</td><td>ODPT外のデータ</td></tr><tr><td>Natural Earth admin-1</td><td>Natural Earth</td><td>都道府県界（地図の土台のみ）</td></tr></tbody></table></div>
+<h2>ライセンス</h2>
+<p>この集計結果は <strong>CC BY 4.0</strong>。出典として「交通データ白地図」と上記の各データを示すこと。</p>
+<div class="lic"><strong>元データそのものは再配布していない。</strong> ここにあるのは、母集団に対して所在を判定した結果（分類と件数）である。元データを使うときは、各提供元の条件に従うこと。特に ODPT のチャレンジ限定ライセンスのデータは、コンテスト期間外は利用できない。</div>
+<h2>読むときの注意</h2>
+<ul><li><code class="mono">データなし</code> は「<strong>確認できた範囲では</strong>無い」という意味。事業者が自社サイトで独自に公開している可能性は残る。</li><li>バスの母集団 P11 は2022年、オープンデータ側は2026年。4年のずれがあり、廃止された停留所が <code class="mono">データなし</code> に混じる。鉄道（N02-24）より条件が悪い。</li><li>バスの判定半径は100m。25m〜200mで 22.8%〜32.8% と動くので、一点ではなく帯で読むこと。</li><li>人口は2015年のみ国勢調査の実測、2020年以降は推計。</li><li>シェアサイクル・フェリー・デマンド交通は全国の母集団が機械可読な形で存在しないため、割合を出していない。</li></ul>
+</main>
+<footer class="wrap"><a href="../">交通データ白地図</a> ／ <a href="../map.html">交通データ夜景図</a> ／ <a href="../concept.html">企画書</a></footer>
+</body>
+</html>

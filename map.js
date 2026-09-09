@@ -1,0 +1,695 @@
+// 交通データ夜景図の描画エンジン（WebGL）。
+//
+// 描くのは鉄道597路線の折れ線と、バス停・シェアサイクルポート・港・空港など
+// 約30万点。2D Canvas の fillRect では拡大時に描画が詰まるため、
+// 頂点バッファを一度GPUへ送り、以降はユニフォームだけを更新する。
+// 1フレームあたりの描画命令は十数回で済む。
+(function () {
+  'use strict';
+
+  // 状態は色で表す。交通機関の別は形と大きさで表す。
+  var STATUS = ['通年オープン', '期間限定', 'ODPT外にあり', 'データなし'];
+  var RGB = {
+    '通年オープン': [0.294, 0.859, 0.969],
+    '期間限定': [0.961, 0.722, 0.333],
+    'ODPT外にあり': [0.557, 0.482, 0.878],
+    'データなし': [0.235, 0.333, 0.408]
+  };
+  // 画面に出す名前。データ側のキーは触らず、表示だけを「所在」の言い方に揃える
+  var LABEL = {
+    '通年オープン': 'ODPT',
+    '期間限定': 'ODPT（期間限定）',
+    'ODPT外にあり': 'ODPT外',
+    'データなし': 'なし'
+  };
+  var HEX = {
+    '通年オープン': '#4BDBF7', '期間限定': '#F5B855',
+    'ODPT外にあり': '#8E7BE0', 'データなし': '#3C5568'
+  };
+
+  function mx(lon) { return (lon + 180) / 360; }
+  function my(lat) {
+    var s = Math.sin(lat * Math.PI / 180);
+    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+  }
+  function decode(flat) {
+    // 差分整数（緯度, 経度）から投影済み座標へ
+    var n = flat.length / 2, a = new Float32Array(n * 2), la = 0, lo = 0;
+    for (var i = 0; i < n; i++) {
+      la += flat[i * 2];
+      lo += flat[i * 2 + 1];
+      a[i * 2] = mx(lo / 1e4);
+      a[i * 2 + 1] = my(la / 1e4);
+    }
+    return a;
+  }
+
+  // ── データ ────────────────────────────────────────────
+  var RAIL = JSON.parse(document.getElementById('rail').textContent).features.map(function (f) {
+    var bb = [1, 1, 0, 0];
+    var parts = f.geometry.coordinates.map(function (ln) {
+      var a = new Float32Array(ln.length * 2);
+      for (var i = 0; i < ln.length; i++) {
+        var x = mx(ln[i][0]), y = my(ln[i][1]);
+        a[i * 2] = x; a[i * 2 + 1] = y;
+        if (x < bb[0]) bb[0] = x;
+        if (y < bb[1]) bb[1] = y;
+        if (x > bb[2]) bb[2] = x;
+        if (y > bb[3]) bb[3] = y;
+      }
+      return a;
+    });
+    return { p: f.properties, parts: parts, bb: bb };
+  });
+
+  var BUS_RANK = ['通年オープン', '期間限定', 'ODPT外にあり', 'データなし'];
+  var SUMMARY = JSON.parse(document.getElementById('summary').textContent);
+  var BUSPTS = {}, BUS_NAMES = {};
+  (function () {
+    var raw = JSON.parse(document.getElementById('bus').textContent);
+    var tab = raw.optab || [];
+    Object.keys(raw.pts).forEach(function (k) {
+      var st = BUS_RANK[+k];
+      BUSPTS[st] = decode(raw.pts[k]);
+      BUS_NAMES[st] = (raw.ops[k] || []).map(function (i) { return tab[i] || ''; });
+    });
+  })();
+  var LAYERS = JSON.parse(document.getElementById('layers').textContent);
+
+  // 海岸線。背景地図タイルは読めないので、日本の形は自前で敷く
+  var COAST = decode(JSON.parse(document.getElementById('coast').textContent));
+  // 県境（内陸部分のみ）。海岸線と二重に描かないよう、海に近い線は落としてある
+  var PREF = decode(JSON.parse(document.getElementById('pref').textContent));
+
+  // 交通機関ごとの表示定義。
+  // n は所在別の実数 [ODPT, ODPT（期間限定）, ODPT外, なし]。
+  // total が null のモードは全国の母集団が無く、割合を出せない。
+  var MODES = [
+    { id: 'rail', label: '鉄道', type: 'line' },
+    { id: 'bus', label: 'バス', type: 'point', size: 1.3 },
+    { id: 'air', label: '航空', type: 'point', size: 5.5, ring: true, halo: true },
+    { id: 'cycle', label: 'シェアサイクル', type: 'point', size: 1.6 },
+    { id: 'ferry', label: 'フェリー', type: 'point', size: 4.5, ring: true, halo: true },
+    { id: 'demand', label: 'デマンド交通', type: 'point', size: 3.0, ring: true, halo: true },
+    { id: 'coast', label: '海岸線・県境', type: 'base', unit: '', n: null, total: null }
+  ];
+
+  MODES.forEach(function (m) {
+    var d = SUMMARY[m.id];
+    if (d) { m.n = d.n; m.total = d.total; m.unit = d.unit; }
+  });
+  var on = {};
+  MODES.forEach(function (m) { on[m.id] = true; });
+
+  // ── WebGL ──────────────────────────────────────────────
+  var cv = document.getElementById('map');
+  var gl = cv.getContext('webgl', { antialias: true, alpha: false, premultipliedAlpha: false })
+        || cv.getContext('experimental-webgl');
+  if (!gl) {
+    cv.style.display = 'none';
+    document.getElementById('fallback').style.display = 'grid';
+    return;
+  }
+
+  function shader(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.error('シェーダのコンパイルに失敗:', gl.getShaderInfoLog(s));
+    }
+    return s;
+  }
+  function program(vs, fs) {
+    var p = gl.createProgram();
+    gl.attachShader(p, shader(gl.VERTEX_SHADER, vs));
+    gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.error('シェーダのリンクに失敗:', gl.getProgramInfoLog(p));
+    }
+    return p;
+  }
+
+  var VS = [
+    'attribute vec2 a_pos;',
+    'uniform vec2 u_center;',
+    'uniform float u_scale;',   // メルカトル単位あたりのCSSピクセル
+    'uniform vec2 u_res;',      // CSSピクセルでのキャンバス寸法
+    'uniform vec2 u_off;',      // 太さを稼ぐための微小オフセット（px）
+    'uniform float u_size;',
+    'void main(){',
+    '  vec2 px = (a_pos - u_center) * u_scale + u_res * 0.5 + u_off;',
+    '  vec2 cl = vec2(px.x / u_res.x * 2.0 - 1.0, 1.0 - px.y / u_res.y * 2.0);',
+    '  gl_Position = vec4(cl, 0.0, 1.0);',
+    '  gl_PointSize = u_size;',
+    '}'
+  ].join('\n');
+
+  var FS_POINT = [
+    'precision mediump float;',
+    'uniform vec4 u_color;',
+    'uniform float u_round;',
+    'void main(){',
+    '  if (u_round > 0.5) {',
+    '    vec2 d = gl_PointCoord - vec2(0.5);',
+    '    if (dot(d, d) > 0.25) discard;',
+    '  }',
+    '  gl_FragColor = u_color;',
+    '}'
+  ].join('\n');
+
+  var prog = program(VS, FS_POINT);
+  var A_POS = gl.getAttribLocation(prog, 'a_pos');
+  var U = {};
+  ['u_center', 'u_scale', 'u_res', 'u_off', 'u_size', 'u_color', 'u_round'].forEach(function (n) {
+    U[n] = gl.getUniformLocation(prog, n);
+  });
+
+  function buffer(arr) {
+    var b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+    return { buf: b, n: arr.length / 2 };
+  }
+
+  // 鉄道は GL_LINES 用に線分の対へ展開する
+  var RAIL_BUF = {};
+  STATUS.forEach(function (s) {
+    var segs = [];
+    RAIL.forEach(function (f) {
+      if (f.p.s !== s) return;
+      f.parts.forEach(function (a) {
+        for (var i = 0; i + 3 < a.length; i += 2) {
+          segs.push(a[i], a[i + 1], a[i + 2], a[i + 3]);
+        }
+      });
+    });
+    if (segs.length) RAIL_BUF[s] = buffer(new Float32Array(segs));
+  });
+  var HOVER_BUF = { buf: gl.createBuffer(), n: 0 };
+  var COAST_BUF = COAST.length ? buffer(COAST) : null;
+  var PREF_BUF = PREF.length ? buffer(PREF) : null;
+
+  var PT_BUF = { bus: {}, air: {}, cycle: {}, ferry: {}, demand: {} };
+  Object.keys(BUSPTS).forEach(function (s) {
+    if (BUSPTS[s].length) PT_BUF.bus[s] = buffer(BUSPTS[s]);
+  });
+  // 点の実体（投影済み座標と名前）。ホバーで名前を出すために保持する
+  var PT_DATA = { bus: {}, air: {}, cycle: {}, ferry: {}, demand: {} };
+  var RANK_KEY = { '0': '通年オープン', '1': '期間限定', '2': 'ODPT外にあり', '3': 'データなし' };
+  ['air', 'cycle', 'ferry', 'demand'].forEach(function (id) {
+    var L = LAYERS[id];
+    if (!L) return;
+    Object.keys(L.pts).forEach(function (k) {
+      var a = decode(L.pts[k]);
+      if (!a.length) return;
+      var st = RANK_KEY[k];
+      PT_BUF[id][st] = buffer(a);
+      PT_DATA[id][st] = { xy: a, names: (L.names && L.names[k]) || [] };
+    });
+  });
+  Object.keys(BUSPTS).forEach(function (st) {
+    if (BUSPTS[st].length) PT_DATA.bus[st] = { xy: BUSPTS[st], names: BUS_NAMES[st] || [] };
+  });
+
+  // 画面上で最も近い点を拾う。格子はメルカトル座標で切る
+  var PCELL = 0.0012;
+  var PIDX = {};
+  Object.keys(PT_DATA).forEach(function (id) {
+    Object.keys(PT_DATA[id]).forEach(function (st) {
+      var a = PT_DATA[id][st].xy;
+      for (var i = 0; i < a.length; i += 2) {
+        var k = Math.floor(a[i] / PCELL) + ':' + Math.floor(a[i + 1] / PCELL);
+        (PIDX[k] || (PIDX[k] = [])).push([id, st, i]);
+      }
+    });
+  });
+  function pickPoint(px, py) {
+    var tol = 8 / view.k;
+    var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
+    var cy = Math.floor(wx / PCELL), cx = Math.floor(wy / PCELL);
+    var best = null, bd = tol * tol;
+    for (var dy = -1; dy <= 1; dy++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        var list = PIDX[(cy + dy) + ':' + (cx + dx)];
+        if (!list) continue;
+        for (var n = 0; n < list.length; n++) {
+          var id = list[n][0], st = list[n][1], i = list[n][2];
+          if (!on[id] || offStatus[st]) continue;
+          var a = PT_DATA[id][st].xy;
+          var ex = wx - a[i], ey = wy - a[i + 1], d = ex * ex + ey * ey;
+          if (d < bd) {
+            bd = d;
+            best = { mode: id, status: st, name: PT_DATA[id][st].names[i / 2] || '' };
+          }
+        }
+      }
+    }
+    return best;
+  }
+
+  // ── 表示状態 ────────────────────────────────────────────
+  var W = 0, H = 0, dpr = 1;
+  var view = { x: 0, y: 0, k: 1 };
+  var hover = null, hoverPt = null, hoverPtKey = null;
+  var offStatus = {};      // 状態ごとの絞り込み
+
+  function envelope(list) {
+    return list.reduce(function (b, f) {
+      return [Math.min(b[0], f.bb[0]), Math.min(b[1], f.bb[1]),
+              Math.max(b[2], f.bb[2]), Math.max(b[3], f.bb[3])];
+    }, [1, 1, 0, 0]);
+  }
+  // 沖縄は本土から遠く、まとめて収めると本土が小さくなりすぎる
+  var MAIN = envelope(RAIL.filter(function (f) { return f.bb[1] < my(30.5); }));
+
+  var headerEl = document.querySelector('header');
+  var sideEl = document.getElementById('side');
+  function resize() {
+    // ヘッダの高さは文字数やフォント読み込みで変わる。CSSで決め打ちせず実測して、
+    // 地図と左パネルがちょうど残りを埋めるようにする。
+    var used = headerEl ? headerEl.getBoundingClientRect().height : 0;
+    var h = Math.max(300, Math.round(window.innerHeight - used));
+    cv.style.height = h + 'px';
+    if (sideEl && window.innerWidth > 900) sideEl.style.height = h + 'px';
+    else if (sideEl) sideEl.style.height = '';
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth || 800;
+    H = cv.clientHeight || 500;
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    gl.viewport(0, 0, cv.width, cv.height);
+  }
+  function baseScale() {
+    return Math.min((W - 40) / (MAIN[2] - MAIN[0]), (H - 40) / (MAIN[3] - MAIN[1]));
+  }
+  function fit() {
+    var pad = Math.max(18, Math.min(56, W * 0.05));
+    view.k = Math.min((W - pad * 2) / (MAIN[2] - MAIN[0]),
+                      (H - pad * 2) / (MAIN[3] - MAIN[1]));
+    view.x = (MAIN[0] + MAIN[2]) / 2;
+    view.y = (MAIN[1] + MAIN[3]) / 2;
+  }
+  function zoomRatio() { return view.k / baseScale(); }
+
+  function setUniforms() {
+    gl.uniform2f(U.u_center, view.x, view.y);
+    gl.uniform1f(U.u_scale, view.k);
+    gl.uniform2f(U.u_res, W, H);
+  }
+  function drawBuf(b, mode, color, alpha, size, off, round) {
+    if (!b || !b.n) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.buf);
+    gl.enableVertexAttribArray(A_POS);
+    gl.vertexAttribPointer(A_POS, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform4f(U.u_color, color[0], color[1], color[2], alpha);
+    gl.uniform1f(U.u_size, size * dpr);
+    gl.uniform2f(U.u_off, off ? off[0] : 0, off ? off[1] : 0);
+    gl.uniform1f(U.u_round, round ? 1 : 0);
+    gl.drawArrays(mode, 0, b.n);
+  }
+
+  // 線幅は WebGL では 1px しか当てにできないので、微小にずらした複数回の描画で
+  // 太さを作る。**ずらす量は拡大率に比例させない。** 比例させると拡大時に
+  // 数px開いてしまい、太った線ではなく平行な2本に見える。
+  var HALO = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+  function halo(i, ws) {
+    var d = Math.min(ws, 1.4) * 0.55;      // 高々0.8px。太さとして読める範囲に留める
+    return [HALO[i][0] * d, HALO[i][1] * d];
+  }
+
+  function draw() {
+    gl.clearColor(0.027, 0.047, 0.067, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(prog);
+    setUniforms();
+    gl.enable(gl.BLEND);
+
+    var z = zoomRatio();
+    var ws = Math.max(1, Math.min(4.5, Math.pow(z, 0.55)));
+
+    // 海岸線は交通機関より下に敷く。1pxのままだと上に載る点群に埋もれるので、
+    // 微小にずらした2回描きで太らせ、輪郭として読める明るさにする。
+    if (on.coast && COAST_BUF) {
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      var cc = [0.16, 0.24, 0.32];
+      // 上下左右にごく僅かずらして太らせる。斜め1方向だけだと二重線に見える
+      for (var ci = 1; ci < HALO.length; ci++) {
+        drawBuf(COAST_BUF, gl.LINES, cc, 0.45, 1, halo(ci, ws), false);
+      }
+      drawBuf(COAST_BUF, gl.LINES, cc, 1, 1, null, false);
+      // 県境は海岸線より一段暗く。位置の手がかりであって主役ではない
+      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.12, 0.18, 0.24], 1, 1, null, false);
+    }
+
+    // 暗いものを先に、明るいものを後に重ねる
+    var order = ['データなし', 'ODPT外にあり', '期間限定', '通年オープン'];
+
+    order.forEach(function (s) {
+      if (offStatus[s]) return;
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+      if (on.rail && RAIL_BUF[s]) {
+        var c = RGB[s];
+        if (s === 'データなし') {
+          drawBuf(RAIL_BUF[s], gl.LINES, c, 0.9, 1, null, false);
+        } else {
+          // 加算を重ねすぎると白に飽和するので、暈しはごく薄くする
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+          for (var i = 1; i < HALO.length; i++) {
+            drawBuf(RAIL_BUF[s], gl.LINES, c, 0.10, 1, halo(i, ws), false);
+          }
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+          drawBuf(RAIL_BUF[s], gl.LINES, c, 0.95, 1, null, false);
+        }
+      }
+
+      MODES.forEach(function (m) {
+        if (m.type !== 'point' || !on[m.id]) return;
+        var b = PT_BUF[m.id] && PT_BUF[m.id][s];
+        if (!b) return;
+        var size = Math.max(m.size, Math.min(m.size * 6, m.size * Math.pow(z, 0.62)));
+        if (s === 'データなし') {
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+          drawBuf(b, gl.POINTS, RGB[s], 0.9, size, null, !!m.ring);
+        } else {
+          // 点数の多いレイヤーに暈しを付けると、割合が実際より多く見える
+          if (m.halo) {
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            drawBuf(b, gl.POINTS, RGB[s], 0.10, size * 2.2, null, true);
+          }
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+          drawBuf(b, gl.POINTS, RGB[s], 0.92, size, null, !!m.ring);
+        }
+      });
+    });
+
+    // 海岸線をごく薄く上からもなぞる。下に敷くだけだと密な点群に埋もれて
+    // 輪郭が読めなくなるため。濃度は低く保ち、データと見紛わせないようにする。
+    if (on.coast && COAST_BUF) {
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      drawBuf(COAST_BUF, gl.LINES, [0.38, 0.48, 0.58], 0.22, 1, null, false);
+      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.34, 0.43, 0.52], 0.16, 1, null, false);
+    }
+
+    if (hover && on.rail) {
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      for (var j = 0; j < HALO.length; j++) {
+        drawBuf(HOVER_BUF, gl.LINES, [1, 1, 1], j === 0 ? 1 : 0.5, 1, halo(j, ws), false);
+      }
+    }
+  }
+
+  var pending = false;
+  function render() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function () { pending = false; draw(); });
+  }
+
+  // ── 当たり判定（鉄道のみ）──────────────────────────────
+  function segDist(px, py, ax, ay, bx, by) {
+    var dx = bx - ax, dy = by - ay, t = 0;
+    if (dx || dy) {
+      t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+      t = t < 0 ? 0 : (t > 1 ? 1 : t);
+    }
+    var ex = px - (ax + t * dx), ey = py - (ay + t * dy);
+    return ex * ex + ey * ey;
+  }
+  function pick(px, py) {
+    var tol = 7 / view.k, best = null, bd = tol * tol;
+    var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
+    for (var n = 0; n < RAIL.length; n++) {
+      var f = RAIL[n], b = f.bb;
+      if (offStatus[f.p.s]) continue;
+      if (wx < b[0] - tol || wx > b[2] + tol || wy < b[1] - tol || wy > b[3] + tol) continue;
+      for (var i = 0; i < f.parts.length; i++) {
+        var a = f.parts[i];
+        for (var j = 0; j < a.length - 2; j += 2) {
+          var d = segDist(wx, wy, a[j], a[j + 1], a[j + 2], a[j + 3]);
+          if (d < bd) { bd = d; best = f; }
+        }
+      }
+    }
+    return best;
+  }
+  function setHover(f) {
+    hover = f;
+    if (!f) { HOVER_BUF.n = 0; return; }
+    var segs = [];
+    f.parts.forEach(function (a) {
+      for (var i = 0; i + 3 < a.length; i += 2) segs.push(a[i], a[i + 1], a[i + 2], a[i + 3]);
+    });
+    gl.bindBuffer(gl.ARRAY_BUFFER, HOVER_BUF.buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(segs), gl.DYNAMIC_DRAW);
+    HOVER_BUF.n = segs.length / 2;
+  }
+
+  // ── 情報パネル ──────────────────────────────────────────
+  var info = document.getElementById('info');
+  var HINT = '<p class="hint">路線や停留所にカーソルを合わせると、'
+           + '事業者名とデータの所在が出ます。</p>';
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function showInfo(f) {
+    if (!f) { info.innerHTML = HINT; return; }
+    var p = f.p, extra = '';
+    if (p.s === 'ODPT外にあり' && p.g) extra += '<dt>公開元</dt><dd>' + esc(p.g) + '</dd>';
+    if (p.o) extra += '<dt>ODPT</dt><dd class="mono">' + esc(p.o) + '</dd>';
+    var st = LABEL[p.s];
+    if (p.s === '期間限定') {
+      // 期間限定が消えたあと、他所にデータがあれば残り、無ければ完全に失われる
+      extra += '<dt>2027-03-13 以降</dt><dd style="color:' + HEX[p.a] + '">' +
+               esc(LABEL[p.a]) + '</dd>';
+    }
+    info.innerHTML =
+      '<p class="ttl">' + esc(p.line) + '</p>' +
+      '<span class="badge" style="color:' + HEX[p.s] + '">' + esc(st) + '</span>' +
+      '<dl><dt>データの所在</dt><dd>' + esc(LABEL[p.s]) + '</dd>' +
+      '<dt>運営会社</dt><dd>' + esc(p.op) + '</dd>' +
+      '<dt>種別</dt><dd>' + esc(p.k) + '</dd>' +
+      '<dt>駅数</dt><dd class="mono">' + p.n + '</dd>' + extra + '</dl>' +
+      (p.s === 'データなし' ? actionHTML(p.op, p.line) : '');
+    bindAction();
+  }
+
+  var MODE_LABEL = {};
+
+  // ── 「なし」で終わらせないための導線 ──────────────────────
+  // 地図は「無い」を示すところまでしかできない。次に誰が何をすれば
+  // 埋まるのかを、その場で持ち帰れる形にする。
+  function requestText(who, what) {
+    return [
+      (who || '（事業者名）') + ' ご担当者さま',
+      '',
+      'いつも' + (what || '公共交通') + 'を利用しております。',
+      '貴社（貴自治体）の運行情報について、',
+      '「標準的なバス情報フォーマット（GTFS-JP）」等の機械可読な形式での',
+      'オープンデータ公開をご検討いただけないでしょうか。',
+      '',
+      '公開されると、経路検索アプリや地図サービスに自動的に反映され、',
+      '利用者が経路を調べられるようになります。時刻表改正の周知も容易になります。',
+      '',
+      '公開の手引き:',
+      '  国土交通省「標準的なバス情報フォーマット」',
+      '  https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000111.html',
+      '  GTFSデータリポジトリ（登録先）',
+      '  https://gtfs-data.jp/',
+      '',
+      '近隣の同規模の事業者・自治体でも公開が進んでいます。',
+      'ご検討のほど、よろしくお願いいたします。'
+    ].join('\n');
+  }
+
+  var actSeq = 0;
+  function actionHTML(who, what) {
+    var id = 'act' + (++actSeq);
+    ACT_PENDING = { id: id, text: requestText(who, what) };
+    return '<span class="act"><p>この' +
+      (what || '路線') + 'のデータはどこにも見つかりません。' +
+      '公開を働きかける文面を用意しました。</p>' +
+      '<button type="button" id="' + id + '">依頼文をコピー</button></span>';
+  }
+  var ACT_PENDING = null;
+  function bindAction() {
+    if (!ACT_PENDING) return;
+    var a = ACT_PENDING, el = document.getElementById(a.id);
+    ACT_PENDING = null;
+    if (!el) return;
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var done = function () {
+        el.textContent = 'コピーしました';
+        el.classList.add('done');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(a.text).then(done, function () { fallback(a.text, done); });
+      } else {
+        fallback(a.text, done);
+      }
+    });
+  }
+  function fallback(text, done) {
+    // クリップボードAPIが使えない場合。選択できる形で出して手で写してもらう
+    var t = document.createElement('textarea');
+    t.value = text;
+    t.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(t);
+    t.select();
+    try { document.execCommand('copy'); done(); } catch (err) { /* 何もしない */ }
+    document.body.removeChild(t);
+  }
+  function showPointInfo(pt) {
+    if (!pt) { showInfo(null); return; }
+    var parts = (pt.name || '').split('｜');
+    var head = parts[0] || MODE_LABEL[pt.mode] || '';
+    var sub = parts.slice(1).filter(Boolean).join(' / ');
+    var act = pt.status === 'データなし'
+      ? actionHTML(sub.split(' / ')[0] || head, MODE_LABEL[pt.mode]) : '';
+    info.innerHTML =
+      '<p class="ttl">' + esc(head || MODE_LABEL[pt.mode]) + '</p>' +
+      '<span class="badge" style="color:' + HEX[pt.status] + '">' +
+      esc(LABEL[pt.status]) + '</span>' +
+      '<dl><dt>交通機関</dt><dd>' + esc(MODE_LABEL[pt.mode]) + '</dd>' +
+      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>' + act;
+    bindAction();
+  }
+
+  // ── 左パネル ────────────────────────────────────────────
+  var ORDER4 = ['通年オープン', '期間限定', 'ODPT外にあり', 'データなし'];
+  MODES.forEach(function (m) { MODE_LABEL[m.id] = m.label; });
+  var skEl = document.getElementById('statuskeys');
+  var rowsEl = document.getElementById('keys');
+
+  function fmt(n) { return n.toLocaleString('ja-JP'); }
+
+  // 色の凡例。押すとその所在を地図から外す
+  skEl.innerHTML = ORDER4.map(function (s) {
+    return '<button class="skey" data-s="' + s + '" aria-pressed="true">' +
+           '<i style="background:' + HEX[s] + '"></i>' + LABEL[s] + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(skEl.querySelectorAll('.skey'), function (k) {
+    k.addEventListener('click', function () {
+      var s = k.dataset.s;
+      offStatus[s] = !offStatus[s];
+      k.setAttribute('aria-pressed', String(!offStatus[s]));
+      if (hover && offStatus[hover.p.s]) { setHover(null); showInfo(null); }
+      render();
+    });
+  });
+
+  // 交通機関ごとの内訳。帯は100%積み上げ、下の実数は帯と同じ色で並べる。
+  // 母集団が無いモードは割合を出さず、実数だけを示す。
+  rowsEl.innerHTML = MODES.map(function (m) {
+    // 母集団のあるモードは母集団数、無いモードは確認できた分の合計を出す。
+    // 「母集団なし」と言葉で書くより、数を出したほうが読み手が判断しやすい。
+    var known = m.n ? m.n.reduce(function (a, b) { return a + b; }, 0) : 0;
+    var right = m.n ? fmt(m.total || known) + ' ' + m.unit : '国土数値情報 C23・NE';
+    var head = '<span class="row-h"><b>' + m.label + '</b><span>' +
+               right + '</span></span>';
+    if (!m.n) {
+      return '<button class="row" data-id="' + m.id + '" aria-pressed="true">' +
+             head + '</button>';
+    }
+    var tot = m.total || m.n.reduce(function (a, b) { return a + b; }, 0);
+    var bar = ORDER4.map(function (s, i) {
+      var w = tot ? m.n[i] / tot * 100 : 0;
+      return w > 0 ? '<i style="width:' + w.toFixed(2) + '%;background:' + HEX[s] + '"></i>' : '';
+    }).join('');
+    var nums = ORDER4.map(function (s, i) {
+      if (!m.n[i]) return '';
+      return '<u style="color:' + HEX[s] + '">' + fmt(m.n[i]) + '</u>';
+    }).filter(Boolean).join('<span class="none">/</span>');
+    return '<button class="row" data-id="' + m.id + '" aria-pressed="true">' +
+           head + '<span class="bar">' + bar + '</span>' +
+           '<span class="nums">' + nums + '</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (k) {
+    k.addEventListener('click', function () {
+      var id = k.dataset.id;
+      on[id] = !on[id];
+      k.setAttribute('aria-pressed', String(on[id]));
+      if (id === 'rail' && !on.rail) { setHover(null); showInfo(null); }
+      render();
+    });
+  });
+
+  document.getElementById('legend-foot').textContent =
+    '数字は左から ODPT ／ ODPT（期間限定）／ ODPT外 ／ なし。帯はその割合。'
+    + '右肩は、鉄道・バス・航空は全国の母集団、シェアサイクル・フェリー・'
+    + 'デマンド交通は全国一覧が無いため確認できた分の合計です。';
+
+  // ── 操作 ────────────────────────────────────────────────
+  var drag = null;
+  cv.addEventListener('pointerdown', function (e) {
+    drag = { x: e.clientX, y: e.clientY };
+    cv.classList.add('drag');
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', function (e) {
+    if (drag) {
+      view.x -= (e.clientX - drag.x) / view.k;
+      view.y -= (e.clientY - drag.y) / view.k;
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      render();
+      return;
+    }
+    var r = cv.getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    var f = on.rail ? pick(px, py) : null;
+    if (f) {
+      if (f !== hover) { setHover(f); showInfo(f); render(); }
+      hoverPt = null;
+      return;
+    }
+    if (hover) { setHover(null); render(); }
+    var pt = pickPoint(px, py);
+    var key = pt ? pt.mode + pt.status + pt.name : null;
+    if (key !== hoverPtKey) { hoverPtKey = key; hoverPt = pt; showPointInfo(pt); }
+  });
+  function endDrag() { if (drag) { cv.classList.remove('drag'); drag = null; } }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+  cv.addEventListener('pointerleave', function () {
+    if (drag) return;
+    if (hover) { setHover(null); render(); }
+    hoverPt = null;
+    hoverPtKey = null;
+    showInfo(null);
+  });
+  cv.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var r = cv.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, Math.pow(1.0016, -e.deltaY));
+  }, { passive: false });
+
+  function zoomAt(px, py, factor) {
+    var b = baseScale();
+    var k2 = Math.max(b * 0.34, Math.min(b * 200, view.k * factor));
+    var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
+    view.x = wx - (px - W / 2) / k2;
+    view.y = wy - (py - H / 2) / k2;
+    view.k = k2;
+    render();
+  }
+
+  document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
+  document.getElementById('zout').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.6); };
+  document.getElementById('zreset').onclick = function () { fit(); render(); };
+
+  window.addEventListener('resize', function () { resize(); fit(); render(); });
+  resize();
+  fit();
+  showInfo(null);
+  draw();
+  // Webフォントが入るとヘッダの高さが動くので、読み込み後に測り直す
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { resize(); fit(); draw(); });
+  }
+})();

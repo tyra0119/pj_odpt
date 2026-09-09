@@ -1,0 +1,280 @@
+{
+ "name": "japan-transit-open-data-coverage",
+ "title": "交通データ白地図 — カバレッジデータ",
+ "description": "日本の公共交通オープンデータがどこにあるかを、全国の母集団に対して集計したもの。",
+ "licenses": [
+  {
+   "name": "CC-BY-4.0",
+   "path": "https://creativecommons.org/licenses/by/4.0/deed.ja"
+  }
+ ],
+ "created": "2026-09-09",
+ "homepage": "https://tyra0119.github.io/pj_odpt/data/",
+ "sources": [
+  {
+   "title": "国土数値情報 N02-24（鉄道）",
+   "author": "国土交通省"
+  },
+  {
+   "title": "国土数値情報 P11-22（バス停留所）",
+   "author": "国土交通省"
+  },
+  {
+   "title": "国土数値情報 C28-21（空港）",
+   "author": "国土交通省"
+  },
+  {
+   "title": "国土数値情報 C23（海岸線）",
+   "author": "国土交通省"
+  },
+  {
+   "title": "国土数値情報 500mメッシュ別将来推計人口",
+   "author": "国土交通省"
+  },
+  {
+   "title": "全国地方公共団体コード",
+   "author": "総務省"
+  },
+  {
+   "title": "公共交通オープンデータセンター",
+   "author": "公共交通オープンデータ協議会"
+  },
+  {
+   "title": "GTFSデータリポジトリ",
+   "author": "gtfs-data.jp"
+  },
+  {
+   "title": "Natural Earth admin-1",
+   "author": "Natural Earth"
+  }
+ ],
+ "resources": [
+  {
+   "name": "railway_coverage",
+   "path": "railway_coverage.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "鉄道路線ごとのデータの所在",
+   "schema": {
+    "fields": [
+     {
+      "name": "n02_operator",
+      "description": "国土数値情報 N02 の運営会社名"
+     },
+     {
+      "name": "n02_line",
+      "description": "同 路線名"
+     },
+     {
+      "name": "op_kind",
+      "description": "事業者種別（JR新幹線／JR在来線／公営鉄道／民営鉄道／第三セクター）"
+     },
+     {
+      "name": "kind",
+      "description": "鉄道区分（普通鉄道／軌道／モノレール など）"
+     },
+     {
+      "name": "stations",
+      "description": "N02 上の駅数"
+     },
+     {
+      "name": "segments",
+      "description": "N02 上の線分数"
+     },
+     {
+      "name": "status",
+      "description": "データの所在。通年オープン／期間限定／ODPT外にあり／データなし"
+     },
+     {
+      "name": "status_after",
+      "description": "2027-03-13 以降の所在（期間限定が消えたあと）"
+     },
+     {
+      "name": "odpt_railways",
+      "description": "対応する odpt.Railway の ID（複数は | 区切り）"
+     },
+     {
+      "name": "odpt_operator",
+      "description": "対応する odpt.Operator の ID"
+     },
+     {
+      "name": "gtfs_org",
+      "description": "gtfs-data.jp の事業者ID（ODPT外にある場合）"
+     },
+     {
+      "name": "gtfs_name",
+      "description": "同 事業者名"
+     }
+    ]
+   }
+  },
+  {
+   "name": "operators_v0",
+   "path": "operators_v0.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "事業者の名寄せ辞書。ODPT・gtfs-data.jp・自治体コードの対応表",
+   "schema": {
+    "fields": [
+     {
+      "name": "unified_id",
+      "description": "統合後のID（クラスタ代表）"
+     },
+     {
+      "name": "name",
+      "description": "代表名"
+     },
+     {
+      "name": "lg_code",
+      "description": "全国地方公共団体コード（6桁）"
+     },
+     {
+      "name": "pref",
+      "description": "都道府県"
+     },
+     {
+      "name": "city",
+      "description": "市区町村"
+     },
+     {
+      "name": "ckan_orgs",
+      "description": "ODPT CKAN の組織slug（| 区切り）"
+     },
+     {
+      "name": "odpt_operators",
+      "description": "odpt.Operator の ID（| 区切り）"
+     },
+     {
+      "name": "gtfs_orgs",
+      "description": "gtfs-data.jp の事業者ID（| 区切り）"
+     },
+     {
+      "name": "registries",
+      "description": "跨っているレジストリ数（1〜3）"
+     },
+     {
+      "name": "evidence",
+      "description": "同一と判断した根拠。lgcode／ckan_url／location／name"
+     },
+     {
+      "name": "needs_review",
+      "description": "人手確認が要るものに yes"
+     },
+     {
+      "name": "review_reason",
+      "description": "その理由"
+     }
+    ]
+   }
+  },
+  {
+   "name": "railway_alias",
+   "path": "railway_alias.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "ODPT の路線名と N02 の路線名の対応（人が確認した分）",
+   "schema": {
+    "fields": [
+     {
+      "name": "odpt_railway",
+      "description": "odpt.Railway の ID"
+     },
+     {
+      "name": "odpt_title",
+      "description": "ODPT 上の路線名"
+     },
+     {
+      "name": "n02_operator",
+      "description": "N02 の運営会社名"
+     },
+     {
+      "name": "n02_line",
+      "description": "N02 の路線名"
+     },
+     {
+      "name": "reason",
+      "description": "なぜ食い違うのか"
+     }
+    ]
+   }
+  },
+  {
+   "name": "bus_coverage",
+   "path": "bus_coverage.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "バスの人口カバー率（バス停から300m以内）",
+   "schema": {
+    "fields": [
+     {
+      "name": "category",
+      "description": "データの所在、またはバス停勢圏外"
+     },
+     {
+      "name": "pop_2015",
+      "description": "2015年人口（国勢調査）"
+     },
+     {
+      "name": "pop_2020",
+      "description": "2020年人口（推計）"
+     },
+     {
+      "name": "pop_2050",
+      "description": "2050年人口（推計）"
+     },
+     {
+      "name": "share_2015",
+      "description": "全国比(%)"
+     },
+     {
+      "name": "share_2020",
+      "description": "同"
+     },
+     {
+      "name": "share_2050",
+      "description": "同"
+     }
+    ]
+   }
+  },
+  {
+   "name": "population_coverage",
+   "path": "population_coverage.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "鉄道の人口カバー率（駅から1km以内）",
+   "schema": {
+    "fields": [
+     {
+      "name": "category",
+      "description": "データの所在、または駅勢圏外"
+     },
+     {
+      "name": "pop_2015",
+      "description": "2015年人口（国勢調査）"
+     },
+     {
+      "name": "pop_2020",
+      "description": "2020年人口（推計）"
+     },
+     {
+      "name": "pop_2050",
+      "description": "2050年人口（推計）"
+     },
+     {
+      "name": "share_2015",
+      "description": "全国比(%)"
+     },
+     {
+      "name": "share_2020",
+      "description": "同"
+     },
+     {
+      "name": "share_2050",
+      "description": "同"
+     }
+    ]
+   }
+  }
+ ]
+}

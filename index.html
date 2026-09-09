@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交通データ白地図</title>
+<meta name="description" content="日本の公共交通オープンデータが、どこに無いのかを描いた地図。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --ink:#131B23; --ink-2:#4E5C69; --ink-3:#7C8A97;
+  --rule:#D3DBE2; --rule-2:#E5EBEF;
+  --accent:#0C7488;
+  --lit:#12809E; --temp:#A96A0C; --void:#8D9BA7;
+  --measure:41rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+    --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+    --rule:#26333D; --rule-2:#1D2831;
+    --accent:#4FC3DC; --lit:#46D6F2; --temp:#E9AE5E; --void:#67757F;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+  --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+  --rule:#26333D; --rule-2:#1D2831;
+  --accent:#4FC3DC; --lit:#46D6F2; --temp:#E9AE5E; --void:#67757F;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--measure); margin:0 auto; padding:0 1.4rem}
+h1,h2{font-family:"Zen Old Mincho",serif; text-wrap:balance; letter-spacing:.02em; margin:0}
+h1{font-size:clamp(2.3rem,7vw,3.2rem); font-weight:900; line-height:1.25}
+h2{font-size:1.1rem; font-weight:700; margin:0 0 .9rem}
+p{margin:0 0 1.1em}
+a{color:var(--accent)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .3rem
+}
+header{padding:4.4rem 0 2.6rem; border-bottom:1px solid var(--rule)}
+.lede{font-size:1.02rem; color:var(--ink-2); margin-top:1.2rem}
+
+/* 数字の帯 */
+.figs{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));
+  gap:1px; background:var(--rule-2); border-block:1px solid var(--rule);
+  margin:2.6rem 0
+}
+.figs div{background:var(--paper); padding:1rem 1.1rem}
+.figs b{
+  display:block; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:1.7rem; font-weight:600; line-height:1.2
+}
+.figs span{display:block; font-size:.76rem; color:var(--ink-3); margin-top:.25rem}
+.f-lit b{color:var(--lit)} .f-temp b{color:var(--temp)} .f-void b{color:var(--void)}
+
+/* 入口 */
+nav{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 3rem}
+nav a{
+  display:block; background:var(--surface); padding:1.15rem 1.3rem;
+  text-decoration:none; color:inherit
+}
+nav a:hover,nav a:focus-visible{background:var(--surface-2); outline:none}
+nav a:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+nav strong{display:block; font-family:"Zen Old Mincho",serif; font-size:1.05rem; color:var(--accent)}
+nav span{display:block; font-size:.84rem; color:var(--ink-2); margin-top:.15rem}
+footer{
+  border-top:1px solid var(--rule); padding:1.8rem 0 4rem;
+  font-size:.76rem; color:var(--ink-3); line-height:1.9
+}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <p class="eyebrow">公共交通オープンデータチャレンジ 2026</p>
+  <h1>交通データ白地図</h1>
+  <p class="lede">
+    公共交通のオープンデータが「どこにあるか」を描いた地図は、すでにある。
+    この企画は逆を描く。<strong>どこに無いのか</strong>を主語にした地図である。
+  </p>
+</header>
+
+<main class="wrap">
+  <div class="figs">
+    <div class="f-lit"><b>19.0%</b><span>通年で使える鉄道データの<br>恩恵が届く人口</span></div>
+    <div class="f-temp"><b>770万</b><span>2027-03-13 に<br>消える鉄道情報の人口</span></div>
+    <div class="f-void"><b>381</b><span>データが見つからない<br>鉄道路線（全597本中）</span></div>
+  </div>
+
+  <h2>3つの入口</h2>
+  <nav>
+    <a href="concept.html">
+      <strong>企画書</strong>
+      <span>なぜ「無い」を主語にするのか。母集団の作り方、A/B/C の分類、実測で分かったこと</span>
+    </a>
+    <a href="map.html">
+      <strong>交通データ夜景図</strong>
+      <span>鉄道・バス・航空・シェアサイクル・フェリー・デマンド交通を1枚に。WebGL 描画</span>
+    </a>
+    <a href="data/">
+      <strong>カバレッジデータ</strong>
+      <span>判定結果そのものを CC BY 4.0 で公開。事業者名寄せ辞書 717件を含む</span>
+    </a>
+  </nav>
+</main>
+
+<footer class="wrap">
+  実測日 <span class="mono">2026-09-09</span>。
+  出典——国土数値情報（国土交通省）、公共交通オープンデータセンター、
+  GTFSデータリポジトリ（<span class="mono">gtfs-data.jp</span>）、総務省 全国地方公共団体コード。<br>
+  集計結果は CC BY 4.0。元データそのものは再配布していない。
+</footer>
+
+</body>
+</html>
