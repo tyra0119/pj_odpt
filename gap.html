@@ -95,6 +95,7 @@ td.n,th.n{text-align:right; font-family:"IBM Plex Mono",monospace;
   font-variant-numeric:tabular-nums; white-space:nowrap}
 tbody tr:last-child td{border-bottom:0}
 tr.low td{color:var(--gap); font-weight:600}
+.na{color:var(--ink-3); font-size:.82em; font-family:"Zen Kaku Gothic New",sans-serif}
 
 /* 帯グラフ */
 .bars{display:grid; gap:.9rem; margin:1.6rem 0}
@@ -174,15 +175,17 @@ footer{
 <span class="sec-no">03 — モード</span>
 <h2>必須要件の6モードは、どこまで揃っているか</h2>
 <p>必須要件は6モードを名指ししている。その各々について、1件でもオープンデータがある都道府県を数えた。</p>
-<div class="tw"><table><thead><tr><th>モード</th><th class="n">ODPT 通年</th><th class="n">ODPT外を含む</th><th class="n">人口カバー</th></tr></thead><tbody>
-<tr><td>鉄道</td><td class="n">22県</td><td class="n">27県</td><td class="n">70.6%</td></tr>
-<tr><td>バス</td><td class="n">36県</td><td class="n">47県</td><td class="n">100.0%</td></tr>
-<tr class="low"><td>デマンド交通</td><td class="n">1県</td><td class="n">9県</td><td class="n">30.2%</td></tr>
-<tr><td>フェリー</td><td class="n">20県</td><td class="n">23県</td><td class="n">67.1%</td></tr>
-<tr class="low"><td>航空</td><td class="n">2県</td><td class="n">2県</td><td class="n">15.9%</td></tr>
-<tr><td>シェアサイクル</td><td class="n">38県</td><td class="n">39県</td><td class="n">93.0%</td></tr>
+<div class="tw"><table><thead><tr><th>モード</th><th class="n">ODPT 通年</th><th class="n">ODPT外を含む</th><th class="n">人口カバー率</th></tr></thead><tbody>
+<tr><td>鉄道</td><td class="n">22県</td><td class="n">27県</td><td class="n">19.6%</td></tr>
+<tr><td>バス</td><td class="n">36県</td><td class="n">47県</td><td class="n">25.1%</td></tr>
+<tr class="low"><td>デマンド交通</td><td class="n">1県</td><td class="n">9県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
+<tr><td>フェリー</td><td class="n">20県</td><td class="n">23県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
+<tr class="low"><td>航空</td><td class="n">2県</td><td class="n">2県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
+<tr><td>シェアサイクル</td><td class="n">38県</td><td class="n">39県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
 </tbody></table></div>
-<p>下2つが際立って低い。<strong>デマンド交通は、ODPT に通年で置かれているのが群馬県の139件だけ</strong>である。同じデマンド交通が <span class='mono'>gtfs-data.jp</span> には 2,579件ある。18倍以上の開きがある。</p>
+<div class="note"><p><strong>県の数と、人口カバー率は別の話である。</strong>バスのオープンデータは47都道府県すべてにあるが、人口で見ると届いているのは<strong>25.1%</strong>にすぎない。1件でもあればその県は「ある」に数えられるからで、県数だけを見ると実態を大きく取り違える。</p></div>
+<p class="fine">人口カバー率は、鉄道は駅から1000m、バスはバス停から300m の圏内人口（2020年推計）。通年オープンと ODPT外にあり の合計で、期間限定は含めない。残り4モードは全国の母集団が無いため割合を出せない。</p>
+<p>県数が際立って低いのは、デマンド交通と航空である。<strong>デマンド交通は、ODPT に通年で置かれているのが群馬県の139件だけ</strong>である。同じデマンド交通が <span class='mono'>gtfs-data.jp</span> には 2,579件ある。18倍以上の開きがある。</p>
 <p>航空はさらに少なく、オープンデータがあるのは千葉県、東京都の2県のみ。母集団は全国108空港なので、<strong>空港を主題にしたアプリは事実上作れない</strong>。</p>
 </section>
 <section class="wrap">
@@ -194,6 +197,7 @@ footer{
 <div class="bar b-repo"><div class="lab">リポジトリを足して作れる</div><div class="track"><span style="width:8.7%"></span></div><div class="val"><b>8県</b><em>1,095万人・8.7%</em></div></div>
 <div class="bar b-none"><div class="lab">どうやっても作れない</div><div class="track"><span style="width:29.4%"></span></div><div class="val"><b>20県</b><em>3,686万人・29.4%</em></div></div>
 </div>
+<p class="fine">帯の人口は<strong>その県に住む人の数</strong>であって、その全員にデータが届くという意味ではない。実際に届いている割合は前節のとおり、鉄道 19.6%、バス 25.1%。</p>
 <p>ODPT だけなら <strong>19県</strong>。そこに GTFSデータリポジトリを足すと <strong>27県</strong>になる。増える8県は岩手県、福島県、富山県、岐阜県、三重県、徳島県、高知県、熊本県。<strong>必須要件がリポジトリを含めていることは、確かに効いている。</strong></p>
 <div class="note"><p><strong>20県・3,686万人（全国の29.4%）</strong>では、何をどう組み合わせても<strong>乗換案内は</strong>作れない。ただしこれは乗換案内の話であって、そこで何も作れないという意味ではない。次の節に続く。</p></div>
 <h3>作れない理由は、全部おなじだった</h3>
