@@ -744,13 +744,56 @@
   // タップ判定。**指ではホバーが使えない。**
   // 押して離すまでの移動が小さければ、そこを選んだものとして扱う。
   var tap = null;
+
+  // ── 2本指の操作 ────────────────────────────────────────
+  // キャンバスは touch-action:none にしてあるので、ブラウザの拡大縮小は効かない。
+  // 指の間隔と中点を自分で追い、間隔の比で拡大、中点の移動で平行移動する。
+  var live = {};        // いま触れている指
+  var pinch = null;     // 2本指のときの直前の状態
+  function fingers() {
+    var a = [];
+    for (var k in live) { if (live.hasOwnProperty(k)) a.push(live[k]); }
+    return a;
+  }
+  function pinchState() {
+    var f = fingers();
+    var dx = f[0].x - f[1].x, dy = f[0].y - f[1].y;
+    return {
+      d: Math.max(1, Math.sqrt(dx * dx + dy * dy)),
+      x: (f[0].x + f[1].x) / 2,
+      y: (f[0].y + f[1].y) / 2
+    };
+  }
+
   cv.addEventListener('pointerdown', function (e) {
-    tap = { x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
-    drag = { x: e.clientX, y: e.clientY };
-    cv.classList.add('drag');
+    live[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var n = fingers().length;
+    if (n === 1) {
+      tap = { x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
+      drag = { x: e.clientX, y: e.clientY };
+      cv.classList.add('drag');
+    } else if (n === 2) {
+      tap = null;           // 2本目が触れた時点で、これはタップではない
+      drag = null;
+      pinch = pinchState();
+    }
     cv.setPointerCapture(e.pointerId);
   });
   cv.addEventListener('pointermove', function (e) {
+    if (live[e.pointerId]) {
+      live[e.pointerId].x = e.clientX;
+      live[e.pointerId].y = e.clientY;
+    }
+    if (pinch && fingers().length >= 2) {
+      var now = pinchState();
+      // 先に中点の移動ぶんだけ動かし、そのうえで中点を軸に拡大縮小する
+      view.x -= (now.x - pinch.x) / view.k;
+      view.y -= (now.y - pinch.y) / view.k;
+      var r0 = cv.getBoundingClientRect();
+      zoomAt(now.x - r0.left, now.y - r0.top, now.d / pinch.d);
+      pinch = now;
+      return;
+    }
     if (drag) {
       view.x -= (e.clientX - drag.x) / view.k;
       view.y -= (e.clientY - drag.y) / view.k;
@@ -773,8 +816,22 @@
     if (key !== hoverPtKey) { hoverPtKey = key; hoverPt = pt; showPointInfo(pt); }
   });
   function endDrag() { if (drag) { cv.classList.remove('drag'); drag = null; } }
+  function liftFinger(e) {
+    delete live[e.pointerId];
+    var f = fingers();
+    if (f.length < 2) pinch = null;
+    if (f.length === 1) {
+      // 2本から1本に減った。残った指を新しい起点にして、飛ぶのを防ぐ
+      drag = { x: f[0].x, y: f[0].y };
+      cv.classList.add('drag');
+      return false;
+    }
+    if (f.length === 0) { endDrag(); return true; }
+    pinch = pinchState();
+    return false;
+  }
   cv.addEventListener('pointerup', function (e) {
-    endDrag();
+    if (!liftFinger(e)) { tap = null; return; }
     if (!tap) return;
     var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
     var touch = tap.touch;
@@ -790,9 +847,9 @@
     hoverPtKey = pt ? pt.mode + pt.status + pt.name : null;
     showPointInfo(pt);
   });
-  cv.addEventListener('pointercancel', endDrag);
+  cv.addEventListener('pointercancel', function (e) { liftFinger(e); tap = null; });
   cv.addEventListener('pointerleave', function () {
-    if (drag) return;
+    if (drag || pinch) return;
     if (hover) { setHover(null); render(); }
     hoverPt = null;
     hoverPtKey = null;
@@ -828,7 +885,12 @@
     if (localStorage.getItem(SEEN)) intro.classList.add('gone');
   } catch (e) { /* 出したままでよい */ }
   document.getElementById('introgo').addEventListener('click', closeIntro);
-  cv.addEventListener('pointerdown', closeIntro);   // 地図を触ったら閉じる
+  // **指では地図を触ったら閉じる、にしてはいけない。**
+  // スマホは画面を送るのに地図の上から指を置くので、読む前に消えてしまう。
+  // マウスのときだけ、地図を使い始めたら閉じる。
+  cv.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse') closeIntro();
+  });
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
   document.getElementById('zout').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.6); };
