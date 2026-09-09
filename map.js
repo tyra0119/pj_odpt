@@ -881,15 +881,123 @@
     intro.classList.add('gone');
     try { localStorage.setItem(SEEN, '1'); } catch (e) { /* 使えなくても構わない */ }
   }
-  try {
-    if (localStorage.getItem(SEEN)) intro.classList.add('gone');
-  } catch (e) { /* 出したままでよい */ }
+  // 判定そのものは、地図の直後に置いた小さなスクリプトで済ませてある。
+  // ここまで来るのは埋め込みデータを読み終えたあとで、遅すぎる。
+  document.getElementById('zhelp').addEventListener('click', function () {
+    intro.classList.remove('gone');
+    try { localStorage.removeItem(SEEN); } catch (e) { /* 気にしない */ }
+  });
   document.getElementById('introgo').addEventListener('click', closeIntro);
   // **指では地図を触ったら閉じる、にしてはいけない。**
   // スマホは画面を送るのに地図の上から指を置くので、読む前に消えてしまう。
   // マウスのときだけ、地図を使い始めたら閉じる。
   cv.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse') closeIntro();
+  });
+
+  // ── 検索 ────────────────────────────────────────────────
+  // 名前は取得済みのものだけで足りる。駅（N02）・観光資源（P12）・
+  // 事業者（P11 と N02 の運営会社名）。**バス停27.8万件は入れていない。**
+  // 同名が多すぎて選べないため、事業者から辿る形にした。
+  var SEARCH = JSON.parse(document.getElementById('search').textContent);
+  var S_XY = decode(SEARCH.pts);
+  var qEl = document.getElementById('q');
+  var hitsEl = document.getElementById('hits');
+  var hitList = [], hitAt = -1;
+
+  function flyTo(i) {
+    var bb = SEARCH.boxes && SEARCH.boxes[String(i)];
+    if (bb) {
+      // 市区町村は広さがまちまちなので、範囲に合わせて寄せる。
+      // 決め打ちの倍率だと、政令市の区は寄りすぎ、山間の町は収まらない。
+      var x0 = mx(bb[1]), x1 = mx(bb[3]), y0 = my(bb[2]), y1 = my(bb[0]);
+      var pad = 1.35;                      // 周りの状況も見えるよう少し引く
+      view.x = (x0 + x1) / 2;
+      view.y = (y0 + y1) / 2;
+      view.k = Math.min(W / Math.max(1e-6, (x1 - x0) * pad),
+                        H / Math.max(1e-6, (y1 - y0) * pad));
+      view.k = Math.max(baseScale() * 1.2, Math.min(baseScale() * 400, view.k));
+    } else {
+      view.x = S_XY[i * 2];
+      view.y = S_XY[i * 2 + 1];
+      view.k = Math.max(view.k, baseScale() * 26); // 街の形が見える程度まで寄る
+    }
+    closeIntro();
+    showFound(i);
+    render();
+  }
+
+  // 選んだものを情報パネルに残す。市区町村はここが数字の置き場になる
+  function showFound(i) {
+    info.innerHTML =
+      '<p class="ttl">' + esc(SEARCH.names[i]) + '</p>' +
+      '<span class="badge" style="color:var(--ink-2)">' +
+      esc(SEARCH.kindLabel[SEARCH.kinds[i]]) + '</span>' +
+      '<dl><dt>' + (SEARCH.kinds[i] === 3 ? '内訳' : '所属') + '</dt><dd>' +
+      esc(SEARCH.subtab[SEARCH.subs[i]]) + '</dd></dl>';
+  }
+  function closeHits() { hitsEl.classList.remove('open'); hitAt = -1; }
+
+  function runSearch() {
+    var q = qEl.value.trim();
+    if (!q) { hitList = []; closeHits(); return; }
+    var out = [];
+    // 前方一致を先に、部分一致を後に。探している名前は頭から打つことが多い
+    for (var pass = 0; pass < 2 && out.length < 40; pass++) {
+      for (var i = 0; i < SEARCH.names.length && out.length < 40; i++) {
+        var n = SEARCH.names[i];
+        var at = n.indexOf(q);
+        if (pass === 0 ? at !== 0 : at <= 0) continue;
+        out.push(i);
+      }
+    }
+    hitList = out;
+    hitAt = -1;
+    if (!out.length) {
+      hitsEl.innerHTML = '<li class="none">見つかりません</li>';
+      hitsEl.classList.add('open');
+      return;
+    }
+    hitsEl.innerHTML = out.map(function (i, j) {
+      return '<li role="option" data-j="' + j + '" aria-selected="false">' +
+             '<b><em>' + SEARCH.kindLabel[SEARCH.kinds[i]] + '</em>' +
+             esc(SEARCH.names[i]) + '</b>' +
+             '<span>' + esc(SEARCH.subtab[SEARCH.subs[i]]) + '</span></li>';
+    }).join('');
+    hitsEl.classList.add('open');
+  }
+  function markHit() {
+    Array.prototype.forEach.call(hitsEl.querySelectorAll('li[role]'), function (li, j) {
+      li.setAttribute('aria-selected', String(j === hitAt));
+      if (j === hitAt) li.scrollIntoView({ block: 'nearest' });
+    });
+  }
+  qEl.addEventListener('input', runSearch);
+  qEl.addEventListener('keydown', function (e) {
+    if (!hitList.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      hitAt = (hitAt + (e.key === 'ArrowDown' ? 1 : hitList.length - 1)) % hitList.length;
+      markHit();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      flyTo(hitList[hitAt < 0 ? 0 : hitAt]);
+      closeHits();
+      qEl.blur();
+    } else if (e.key === 'Escape') {
+      closeHits();
+    }
+  });
+  hitsEl.addEventListener('click', function (e) {
+    var li = e.target.closest('li[data-j]');
+    if (!li) return;
+    flyTo(hitList[+li.dataset.j]);
+    closeHits();
+    qEl.blur();
+  });
+  document.getElementById('find').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (hitList.length) { flyTo(hitList[0]); closeHits(); qEl.blur(); }
   });
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };

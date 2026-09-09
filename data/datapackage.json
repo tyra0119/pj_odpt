@@ -199,6 +199,81 @@
    }
   },
   {
+   "name": "municipality_capability",
+   "path": "municipality_capability.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "市区町村ごとのバス・鉄道・観光資源の状況",
+   "schema": {
+    "fields": [
+     {
+      "name": "code",
+      "description": "全国地方公共団体コードの上5桁（政令市の区を含む）"
+     },
+     {
+      "name": "pref",
+      "description": "都道府県名"
+     },
+     {
+      "name": "city",
+      "description": "市区町村名"
+     },
+     {
+      "name": "pop_2020",
+      "description": "2020年推計人口（500mメッシュの合計）"
+     },
+     {
+      "name": "bus_odpt",
+      "description": "その市区町村のバス停のうち、ODPT に通年であるもの"
+     },
+     {
+      "name": "bus_temp",
+      "description": "同 期間限定"
+     },
+     {
+      "name": "bus_outside",
+      "description": "同 ODPT外にあり"
+     },
+     {
+      "name": "bus_none",
+      "description": "同 データなし"
+     },
+     {
+      "name": "rail_odpt",
+      "description": "その市区町村を通る鉄道路線のうち、ODPT に通年であるもの"
+     },
+     {
+      "name": "rail_temp",
+      "description": "同 期間限定"
+     },
+     {
+      "name": "rail_outside",
+      "description": "同 ODPT外にあり"
+     },
+     {
+      "name": "rail_none",
+      "description": "同 データなし"
+     },
+     {
+      "name": "tourism",
+      "description": "国土数値情報 P12 の観光資源の件数"
+     },
+     {
+      "name": "bus_open",
+      "description": "バス停のうち、どこかにデータがあるもの（期間限定を含む）"
+     },
+     {
+      "name": "bus_total",
+      "description": "バス停の総数"
+     },
+     {
+      "name": "bus_share",
+      "description": "bus_open / bus_total (%)。バス停が無い市区町村は空"
+     }
+    ]
+   }
+  },
+  {
    "name": "region_capability",
    "path": "region_capability.csv",
    "format": "csv",
