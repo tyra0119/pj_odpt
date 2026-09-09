@@ -75,6 +75,45 @@ ODPT の路線名と N02 の路線名の対応（人が確認した分）。20�
 | `n02_line` | N02 の路線名 |
 | `reason` | なぜ食い違うのか |
 
+### `region_capability.csv`
+
+都道府県ごとに、どのモードのデータがあり何が作れるか。47行。
+
+| 列 | 意味 |
+|---|---|
+| `pref_code` | 都道府県コード（1〜47） |
+| `pref` | 都道府県名 |
+| `pop_2020` | 2020年推計人口（500mメッシュの合計） |
+| `rail_odpt` | その県を通る鉄道路線のうち、ODPT に通年である本数 |
+| `rail_temp` | 同 期間限定 |
+| `rail_outside` | 同 ODPT外にあり |
+| `rail_none` | 同 データなし |
+| `bus_odpt` | その県のバス停のうち、ODPT に通年であるもの |
+| `bus_temp` | 同 期間限定 |
+| `bus_outside` | 同 ODPT外にあり |
+| `bus_none` | 同 データなし |
+| `air_odpt` | 空港。以下 air/cycle/ferry/demand も同じ4列の並び |
+| `air_temp` | 同 |
+| `air_outside` | 同 |
+| `air_none` | 同 |
+| `cycle_odpt` | シェアサイクルポート |
+| `cycle_temp` | 同 |
+| `cycle_outside` | 同 |
+| `cycle_none` | 同 |
+| `ferry_odpt` | 港 |
+| `ferry_temp` | 同 |
+| `ferry_outside` | 同 |
+| `ferry_none` | 同 |
+| `demand_odpt` | デマンド交通 |
+| `demand_temp` | 同 |
+| `demand_outside` | 同 |
+| `demand_none` | 同 |
+| `transfer` | 鉄道とバスの両方にオープンデータがあり、乗換案内が成立するか（1/0） |
+| `odpt_transfer` | 同上を ODPT のデータだけで満たせるか |
+| `odpt_any` | ODPT に鉄道かバスのどちらかが通年であるか |
+| `temp_only_rail` | 鉄道が期間限定にしか無い（2027-03-13 に失われる） |
+| `temp_only_bus` | バスが期間限定にしか無い |
+
 ### `bus_coverage.csv`
 
 バスの人口カバー率（バス停から300m以内）。5行。

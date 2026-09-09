@@ -199,6 +199,145 @@
    }
   },
   {
+   "name": "region_capability",
+   "path": "region_capability.csv",
+   "format": "csv",
+   "encoding": "utf-8",
+   "description": "都道府県ごとに、どのモードのデータがあり何が作れるか",
+   "schema": {
+    "fields": [
+     {
+      "name": "pref_code",
+      "description": "都道府県コード（1〜47）"
+     },
+     {
+      "name": "pref",
+      "description": "都道府県名"
+     },
+     {
+      "name": "pop_2020",
+      "description": "2020年推計人口（500mメッシュの合計）"
+     },
+     {
+      "name": "rail_odpt",
+      "description": "その県を通る鉄道路線のうち、ODPT に通年である本数"
+     },
+     {
+      "name": "rail_temp",
+      "description": "同 期間限定"
+     },
+     {
+      "name": "rail_outside",
+      "description": "同 ODPT外にあり"
+     },
+     {
+      "name": "rail_none",
+      "description": "同 データなし"
+     },
+     {
+      "name": "bus_odpt",
+      "description": "その県のバス停のうち、ODPT に通年であるもの"
+     },
+     {
+      "name": "bus_temp",
+      "description": "同 期間限定"
+     },
+     {
+      "name": "bus_outside",
+      "description": "同 ODPT外にあり"
+     },
+     {
+      "name": "bus_none",
+      "description": "同 データなし"
+     },
+     {
+      "name": "air_odpt",
+      "description": "空港。以下 air/cycle/ferry/demand も同じ4列の並び"
+     },
+     {
+      "name": "air_temp",
+      "description": "同"
+     },
+     {
+      "name": "air_outside",
+      "description": "同"
+     },
+     {
+      "name": "air_none",
+      "description": "同"
+     },
+     {
+      "name": "cycle_odpt",
+      "description": "シェアサイクルポート"
+     },
+     {
+      "name": "cycle_temp",
+      "description": "同"
+     },
+     {
+      "name": "cycle_outside",
+      "description": "同"
+     },
+     {
+      "name": "cycle_none",
+      "description": "同"
+     },
+     {
+      "name": "ferry_odpt",
+      "description": "港"
+     },
+     {
+      "name": "ferry_temp",
+      "description": "同"
+     },
+     {
+      "name": "ferry_outside",
+      "description": "同"
+     },
+     {
+      "name": "ferry_none",
+      "description": "同"
+     },
+     {
+      "name": "demand_odpt",
+      "description": "デマンド交通"
+     },
+     {
+      "name": "demand_temp",
+      "description": "同"
+     },
+     {
+      "name": "demand_outside",
+      "description": "同"
+     },
+     {
+      "name": "demand_none",
+      "description": "同"
+     },
+     {
+      "name": "transfer",
+      "description": "鉄道とバスの両方にオープンデータがあり、乗換案内が成立するか（1/0）"
+     },
+     {
+      "name": "odpt_transfer",
+      "description": "同上を ODPT のデータだけで満たせるか"
+     },
+     {
+      "name": "odpt_any",
+      "description": "ODPT に鉄道かバスのどちらかが通年であるか"
+     },
+     {
+      "name": "temp_only_rail",
+      "description": "鉄道が期間限定にしか無い（2027-03-13 に失われる）"
+     },
+     {
+      "name": "temp_only_bus",
+      "description": "バスが期間限定にしか無い"
+     }
+    ]
+   }
+  },
+  {
    "name": "bus_coverage",
    "path": "bus_coverage.csv",
    "format": "csv",

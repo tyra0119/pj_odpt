@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>募集要項と実データの距離</title>
+<meta name="description" content="公共交通オープンデータチャレンジ2026 が公開するデータと、実際に使える範囲の隔たりを都道府県別に測ったもの。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --ink:#131B23; --ink-2:#4E5C69; --ink-3:#7C8A97;
+  --rule:#D3DBE2; --rule-2:#E5EBEF;
+  --accent:#0C7488; --accent-wash:#DDEEF2;
+  --ok:#12809E; --warn:#A96A0C; --gap:#B4472F;
+  --measure:42rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+    --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+    --rule:#26333D; --rule-2:#1D2831;
+    --accent:#4FC3DC; --accent-wash:#14313A;
+    --ok:#46D6F2; --warn:#E9AE5E; --gap:#E9836A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+  --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+  --rule:#26333D; --rule-2:#1D2831;
+  --accent:#4FC3DC; --accent-wash:#14313A;
+  --ok:#46D6F2; --warn:#E9AE5E; --gap:#E9836A;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--measure); margin:0 auto; padding:0 1.4rem}
+h1,h2,h3{font-family:"Zen Old Mincho",serif; text-wrap:balance; letter-spacing:.02em; margin:0}
+h1{font-size:clamp(2.1rem,6.5vw,3rem); font-weight:900; line-height:1.25}
+h2{font-size:1.45rem; font-weight:700; line-height:1.5; margin:0 0 .7rem}
+h3{font-size:1.02rem; font-weight:700; margin:2rem 0 .4rem}
+p{margin:0 0 1.05em}
+a{color:var(--accent)}
+em{font-style:normal; font-weight:700; color:var(--ink);
+  box-shadow:inset 0 -.5em 0 var(--accent-wash)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .3rem
+}
+header{padding:4rem 0 2.4rem; border-bottom:1px solid var(--rule)}
+.lede{font-size:1.05rem; color:var(--ink-2); margin-top:1.1rem}
+.meta{font-size:.78rem; color:var(--ink-3); margin:1.2rem 0 0}
+section{padding:2.9rem 0; border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+.sec-no{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.14em;
+  color:var(--ink-3); display:block; margin-bottom:.5rem
+}
+
+/* 引用 */
+.quote{
+  background:var(--surface); border:1px solid var(--rule);
+  border-left:3px solid var(--accent); padding:1rem 1.2rem; margin:1.3rem 0
+}
+.quote .q{margin:0; font-size:.95rem; line-height:1.9}
+.quote .src{
+  margin:.5rem 0 0; font-size:.74rem; color:var(--ink-3);
+  font-family:"IBM Plex Mono",monospace; letter-spacing:.06em
+}
+ul.crit{
+  list-style:none; margin:1rem 0 1.3rem; padding:0;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); gap:.4rem
+}
+ul.crit li{
+  font-size:.86rem; color:var(--ink-2);
+  border-left:2px solid var(--rule); padding-left:.7rem
+}
+
+/* 表 */
+.tw{overflow-x:auto; margin:1.3rem 0}
+table{border-collapse:collapse; width:100%; font-size:.87rem; min-width:24rem}
+th,td{padding:.5rem .7rem; text-align:left; border-bottom:1px solid var(--rule-2)}
+thead th{
+  font-size:.72rem; letter-spacing:.05em; color:var(--ink-3); font-weight:500;
+  border-bottom:1px solid var(--rule); white-space:nowrap
+}
+td.n,th.n{text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tr.low td{color:var(--gap); font-weight:600}
+
+/* 帯グラフ */
+.bars{display:grid; gap:.9rem; margin:1.6rem 0}
+.bar{display:grid; grid-template-columns:1fr; gap:.3rem}
+.bar .lab{font-size:.86rem; font-weight:700}
+.bar .track{height:.85rem; background:var(--rule-2); border-radius:1px; overflow:hidden}
+.bar .track span{display:block; height:100%}
+.b-odpt .track span{background:var(--ok)}
+.b-repo .track span{background:var(--accent)}
+.b-none .track span{background:var(--gap)}
+.bar .val{display:flex; gap:.7rem; align-items:baseline; font-size:.8rem}
+.bar .val b{font-family:"IBM Plex Mono",monospace; font-size:1rem}
+.bar .val em{
+  font-style:normal; font-weight:400; color:var(--ink-3); box-shadow:none;
+  font-family:"IBM Plex Mono",monospace
+}
+
+.note{
+  font-size:.9rem; color:var(--ink-2); border-left:2px solid var(--gap);
+  padding:.1rem 0 .1rem 1rem; margin:1.4rem 0
+}
+.note p:last-child{margin-bottom:0}
+.fine{font-size:.78rem; color:var(--ink-3); margin-top:-.6rem}
+ul.fine-list{margin:1.1rem 0; padding-left:1.2rem; font-size:.88rem; color:var(--ink-2)}
+ul.fine-list li{margin-bottom:.5em}
+
+.prefs{display:flex; flex-wrap:wrap; gap:.4rem; margin:1.2rem 0}
+.prefs span{
+  font-size:.84rem; background:var(--surface); border:1px solid var(--rule);
+  border-bottom:2px solid var(--warn); padding:.2rem .7rem
+}
+
+/* 提案 */
+.props{display:grid; gap:1rem; margin:1.6rem 0 0}
+.prop{background:var(--surface); border:1px solid var(--rule); padding:1.2rem 1.3rem}
+.prop .tag{
+  margin:0; font-family:"IBM Plex Mono",monospace; font-size:.72rem;
+  letter-spacing:.12em; color:var(--accent)
+}
+.prop h3{margin:.25rem 0 .5rem; font-size:1.08rem}
+.prop p:last-child{margin-bottom:0; font-size:.92rem; color:var(--ink-2)}
+
+footer{
+  border-top:1px solid var(--rule); padding:1.8rem 0 4rem;
+  font-size:.78rem; color:var(--ink-3); line-height:1.9
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="wrap">
+<p class="eyebrow">交通データ白地図</p>
+<h1>募集要項と、実データの距離</h1>
+<p class="lede">チャレンジ2026 は<em>「地方での課題解決」</em>を狙いに掲げ、5つの提供元からオープンデータを公開している。では実際に、どこで何が作れるのか。全国の母集団に対して測った。</p>
+<p class="meta">実測 <span class="mono">2026-09-09</span>　／　募集要項は <a href="https://challenge2026.odpt.org/ja/outline.html">開催概要</a> と <a href="https://challenge2026.odpt.org/ja/opendata.html">公開するオープンデータ</a> より引用</p>
+</header>
+<main>
+<section class="wrap">
+<span class="sec-no">01 — 要件</span>
+<h2>チャレンジが用意しているもの</h2>
+<div class="quote"><p class="q">公共交通オープンデータセンターおよびGTFSデータリポジトリで公開されている、鉄道・バス・デマンド交通・フェリー・航空・シェアサイクルなどの公共交通オープンデータを活用していることを必須</p><p class="src">応募の必須要件</p></div>
+<div class="quote"><p class="q">公共交通のオープンデータを含めた様々なデータを最大限に活用した、地方での課題解決や新しいデータの利活用につながるアプリケーション</p><p class="src">募集の狙い</p></div>
+<p>公開されるデータは公共交通だけではない。5つの提供元があり、さらに連携先が並ぶ。ほこナビ・Project LINKS・PLATEAU は<strong>活用が強く推奨</strong>されている。</p>
+<div class="tw"><table><thead><tr><th>提供元</th><th>中身</th></tr></thead><tbody><tr><td>公共交通オープンデータセンター</td><td>鉄道・バス・デマンド交通・フェリー・航空・シェアサイクル。チャレンジ限定のデータを含む</td></tr><tr><td>GTFSデータリポジトリ</td><td>市町村のコミュニティバスや民間事業者の鉄道・バス・フェリーの GTFS</td></tr><tr><td>歩行空間ナビ・プロジェクト（ほこナビ）</td><td>段差などのバリア情報、バリアフリー施設の情報</td></tr><tr><td>Project LINKS</td><td>行政情報をデータとして再構築したもの</td></tr><tr><td>PLATEAU</td><td>3D都市モデル</td></tr><tr><td>連携オープンデータ</td><td>国土交通データプラットフォーム、G空間情報センター、国土地理院、e-Stat、東京都、警察庁の交通事故統計、気象庁</td></tr></tbody></table></div>
+<p>審査で特に重視されるのは次の4点。</p>
+<ul class="crit"><li>社会課題解決への寄与</li><li>オープンデータ活用におけるインパクト</li><li>技術的な完成度</li><li>UI/UX面の完成度</li></ul>
+<p>読み取れることが3つある。<strong>GTFSデータリポジトリが必須要件に含まれる</strong>こと。狙いが<strong>「地方」</strong>だと明記されていること。そして<strong>公共交通以外のデータが同じ卓に載っている</strong>ことである。順に測る。</p>
+</section>
+<section class="wrap">
+<span class="sec-no">02 — 二種類</span>
+<h2>場所を選ぶデータと、選ばないデータ</h2>
+<p>公開されているデータは、性質が二つに割れる。<strong>どこにあるかが問題になるもの</strong>と、<strong>全国どこでも同じように使えるもの</strong>である。この地図が扱えるのは前者だけで、後者は白地図にならない。</p>
+<div class="tw"><table><thead><tr><th>データ</th><th>地域の広がり</th><th>測った値</th></tr></thead><tbody><tr><td><strong>公共交通オープンデータセンター</strong></td><td>偏りが大きい</td><td>鉄道 22県 ／ バス 36県</td></tr><tr><td><strong>GTFSデータリポジトリ</strong></td><td>バスは全国</td><td>バス 47都道府県すべて</td></tr><tr><td><strong>ほこナビ</strong></td><td>極端に偏る</td><td>31件中 24件が東京・神奈川</td></tr><tr><td><strong>PLATEAU</strong></td><td>全国に散る</td><td>306地域 ／ 45都道府県</td></tr><tr><td><strong>Project LINKS</strong></td><td>行政情報のため場所の軸を持たない</td><td>—</td></tr><tr><td><strong>連携先（e-Stat・気象庁・警察庁・国土地理院）</strong></td><td>全国一律</td><td>地域差なし</td></tr></tbody></table></div>
+<div class="note"><p>だから<strong>「データが無いから何も作れない」は言い過ぎ</strong>になる。全国一律のデータはどこでも使えるし、バスは47都道府県すべてにある。問題は<strong>作れるものの種類が場所によって変わる</strong>ことである。</p></div>
+</section>
+<section class="wrap">
+<span class="sec-no">03 — モード</span>
+<h2>必須要件の6モードは、どこまで揃っているか</h2>
+<p>必須要件は6モードを名指ししている。その各々について、1件でもオープンデータがある都道府県を数えた。</p>
+<div class="tw"><table><thead><tr><th>モード</th><th class="n">ODPT 通年</th><th class="n">ODPT外を含む</th><th class="n">人口カバー</th></tr></thead><tbody>
+<tr><td>鉄道</td><td class="n">22県</td><td class="n">27県</td><td class="n">70.6%</td></tr>
+<tr><td>バス</td><td class="n">36県</td><td class="n">47県</td><td class="n">100.0%</td></tr>
+<tr class="low"><td>デマンド交通</td><td class="n">1県</td><td class="n">9県</td><td class="n">30.2%</td></tr>
+<tr><td>フェリー</td><td class="n">20県</td><td class="n">23県</td><td class="n">67.1%</td></tr>
+<tr class="low"><td>航空</td><td class="n">2県</td><td class="n">2県</td><td class="n">15.9%</td></tr>
+<tr><td>シェアサイクル</td><td class="n">38県</td><td class="n">39県</td><td class="n">93.0%</td></tr>
+</tbody></table></div>
+<p>下2つが際立って低い。<strong>デマンド交通は、ODPT に通年で置かれているのが群馬県の139件だけ</strong>である。同じデマンド交通が <span class='mono'>gtfs-data.jp</span> には 2,579件ある。18倍以上の開きがある。</p>
+<p>航空はさらに少なく、オープンデータがあるのは千葉県、東京都の2県のみ。母集団は全国108空港なので、<strong>空港を主題にしたアプリは事実上作れない</strong>。</p>
+</section>
+<section class="wrap">
+<span class="sec-no">04 — 地方</span>
+<h2>「地方での課題解決」は、どこまで可能か</h2>
+<p>公共交通のいちばん基本的な組み合わせで測る。<strong>鉄道とバスの両方にオープンデータがあるか</strong>——つまり、その県で乗換案内が成立するか。</p>
+<div class="bars">
+<div class="bar b-odpt"><div class="lab">ODPT のデータだけで作れる</div><div class="track"><span style="width:61.8%"></span></div><div class="val"><b>19県</b><em>7,751万人・61.8%</em></div></div>
+<div class="bar b-repo"><div class="lab">リポジトリを足して作れる</div><div class="track"><span style="width:8.7%"></span></div><div class="val"><b>8県</b><em>1,095万人・8.7%</em></div></div>
+<div class="bar b-none"><div class="lab">どうやっても作れない</div><div class="track"><span style="width:29.4%"></span></div><div class="val"><b>20県</b><em>3,686万人・29.4%</em></div></div>
+</div>
+<p>ODPT だけなら <strong>19県</strong>。そこに GTFSデータリポジトリを足すと <strong>27県</strong>になる。増える8県は岩手県、福島県、富山県、岐阜県、三重県、徳島県、高知県、熊本県。<strong>必須要件がリポジトリを含めていることは、確かに効いている。</strong></p>
+<div class="note"><p><strong>20県・3,686万人（全国の29.4%）</strong>では、何をどう組み合わせても<strong>乗換案内は</strong>作れない。ただしこれは乗換案内の話であって、そこで何も作れないという意味ではない。次の節に続く。</p></div>
+<h3>作れない理由は、全部おなじだった</h3>
+<p>バスのオープンデータは<strong>47都道府県すべてにある</strong>。鉄道は27県しかない。つまり、作れない20県は<strong>例外なく鉄道側が理由</strong>である。逆——鉄道はあるがバスが無い県——は0県だった。</p>
+<div class="tw"><table><thead><tr><th>県</th><th class="n">人口</th><th class="n">データの無い鉄道路線</th><th class="n">その駅数</th><th class="n">使えるバス停</th><th class="n">PLATEAU</th><th class="n">ほこナビ</th></tr></thead><tbody>
+<tr><td>兵庫県</td><td class="n">544万人</td><td class="n">40</td><td class="n">667</td><td class="n">3,130</td><td class="n">5</td><td class="n">1</td></tr>
+<tr><td>北海道</td><td class="n">522万人</td><td class="n">26</td><td class="n">462</td><td class="n">1,009</td><td class="n">5</td><td class="n">—</td></tr>
+<tr><td>福岡県</td><td class="n">509万人</td><td class="n">28</td><td class="n">600</td><td class="n">2,290</td><td class="n">9</td><td class="n">—</td></tr>
+<tr><td>広島県</td><td class="n">282万人</td><td class="n">16</td><td class="n">407</td><td class="n">67</td><td class="n">6</td><td class="n">—</td></tr>
+<tr><td>岡山県</td><td class="n">190万人</td><td class="n">16</td><td class="n">400</td><td class="n">2,119</td><td class="n">5</td><td class="n">—</td></tr>
+<tr><td>鹿児島県</td><td class="n">158万人</td><td class="n">12</td><td class="n">399</td><td class="n">1,210</td><td class="n">1</td><td class="n">—</td></tr>
+<tr><td>沖縄県</td><td class="n">146万人</td><td class="n">1</td><td class="n">19</td><td class="n">164</td><td class="n">1</td><td class="n">—</td></tr>
+<tr><td>山口県</td><td class="n">135万人</td><td class="n">9</td><td class="n">251</td><td class="n">386</td><td class="n">1</td><td class="n">—</td></tr>
+<tr><td>愛媛県</td><td class="n">132万人</td><td class="n">11</td><td class="n">96</td><td class="n">5</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>奈良県</td><td class="n">132万人</td><td class="n">15</td><td class="n">280</td><td class="n">218</td><td class="n">2</td><td class="n">—</td></tr>
+<tr><td>長崎県</td><td class="n">132万人</td><td class="n">11</td><td class="n">199</td><td class="n">113</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>石川県</td><td class="n">114万人</td><td class="n">8</td><td class="n">130</td><td class="n">800</td><td class="n">2</td><td class="n">—</td></tr>
+<tr><td>大分県</td><td class="n">113万人</td><td class="n">5</td><td class="n">212</td><td class="n">561</td><td class="n">2</td><td class="n">—</td></tr>
+<tr><td>宮崎県</td><td class="n">106万人</td><td class="n">5</td><td class="n">187</td><td class="n">8</td><td class="n">1</td><td class="n">—</td></tr>
+<tr><td>香川県</td><td class="n">98万人</td><td class="n">7</td><td class="n">171</td><td class="n">1,043</td><td class="n">2</td><td class="n">1</td></tr>
+<tr><td>和歌山県</td><td class="n">93万人</td><td class="n">12</td><td class="n">292</td><td class="n">1,797</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>佐賀県</td><td class="n">82万人</td><td class="n">10</td><td class="n">333</td><td class="n">122</td><td class="n">6</td><td class="n">—</td></tr>
+<tr><td>福井県</td><td class="n">76万人</td><td class="n">9</td><td class="n">161</td><td class="n">1,098</td><td class="n">—</td><td class="n">1</td></tr>
+<tr><td>島根県</td><td class="n">67万人</td><td class="n">4</td><td class="n">73</td><td class="n">708</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>鳥取県</td><td class="n">55万人</td><td class="n">5</td><td class="n">86</td><td class="n">5</td><td class="n">4</td><td class="n">—</td></tr>
+</tbody></table></div>
+<p class="fine">県をまたぐ路線は、通る県それぞれで1本と数えている。全国合計にはならない。<br>「使えるバス停」は件数であって、路線網として足りているかは別問題である。広島県、愛媛県、宮崎県、鳥取県は100件に満たず、鉄道が入っても実用にはならない。</p>
+</section>
+<section class="wrap">
+<span class="sec-no">05 — 期限</span>
+<h2>2027年3月13日に、作ったものが動かなくなる県</h2>
+<p>チャレンジ専用のライセンスで配られているデータは、コンテスト期間の終わりとともに使えなくなる。<strong>鉄道のデータが期間限定にしか無い県</strong>——つまりコンテスト中は作れるが、その後は動かせなくなる県が7県ある。</p>
+<p class="prefs"><span>兵庫県</span><span>鳥取県</span><span>島根県</span><span>岡山県</span><span>山口県</span><span>香川県</span><span>愛媛県</span></p>
+<p>1,221万人、全国の9.7%。中国・四国がまるごと入る。ここを主題に選ぶと、<strong>作品は完成した瞬間から寿命が決まっている</strong>ことになる。</p>
+</section>
+<section class="wrap">
+<span class="sec-no">06 — 提案</span>
+<h2>こういうデータが、ここにあれば</h2>
+<p>ここまでは測った事実である。ここから先は、その事実から見えてくる<strong>「あと何があれば何ができるか」</strong>を並べる。誰かに求めるものではなく、可能性の地図として読んでほしい。</p>
+<div class="props">
+<div class="prop"><p class="tag">鉄道の静的データ</p><h3>兵庫県・北海道・福岡県・岡山県 に1事業者ぶん</h3><p>この20県のうち16県は、バス側に数百〜数千の停留所ぶんのデータが既にある。鉄道の時刻表と駅が機械可読な形で1つ入るだけで、<strong>乗換案内が成立する県が増える</strong>。上位4県だけで1,764万人。<em>追加コストあたりの効き目が、全国でいちばん大きい場所である。</em></p></div>
+<div class="prop"><p class="tag">重なりが一枚足りない場所</p><h3>兵庫県・香川県・福井県——歩行空間データはあるのに、鉄道が無い</h3><p>ほこナビの歩行空間ネットワークは、地方では数えるほどしかない。その少ない地方の例が兵庫県・香川県・福井県にある。ところが同じ県に鉄道のオープンデータが無いため、<strong>駅までの経路と、駅からの移動が、つながらない</strong>。段差を避けた経路案内という、ほこナビが想定するそのままの使い方が、鉄道データ一枚で完成する場所である。</p></div>
+<div class="prop"><p class="tag">組み合わせを変える</p><h3>乗換案内が作れない20県のうち、19県に PLATEAU がある</h3><p>合計64地域。鉄道データが無くても、<strong>バス＋3D都市モデル＋全国一律のデータ</strong>（気象、交通事故統計、メッシュ人口）で組める題材はある。浸水時のバス経路、事故多発地点と停留所の関係、人口減少と路線網の重ね合わせ——いずれも鉄道の時刻表を必要としない。<em>「地方だから作れない」ではなく、「地方で作れるものが違う」。</em></p></div>
+<div class="prop"><p class="tag">デマンド交通</p><h3>ODPT への集約だけで、1県が9県になる</h3><p>デマンド交通は募集要項が名指ししているモードだが、ODPT に通年で置かれているのは1県だけ。同じデータが <span class='mono'>gtfs-data.jp</span> には 2,579件ある。<strong>新しく作らなくていい。すでにあるものが、片方にしか無い。</strong>集約されれば「交通空白×デマンド交通」という、募集要項が想定するそのままのテーマが成立する。</p></div>
+<div class="prop"><p class="tag">通年ライセンス</p><h3>中国・四国の鉄道が通年になれば、作品が生き残る</h3><p>7県の鉄道は期間限定にしか無い。ここが通年に変われば、<strong>コンテストで生まれたものがコンテストの後も動き続ける</strong>。審査基準の「社会課題解決への寄与」を実際に果たせるかどうかは、作品の出来より先に、この一点で決まっている県がある。</p></div>
+<div class="prop"><p class="tag">ほこナビ</p><h3>31件のうち24件が東京・神奈川</h3><p>歩行空間のバリアフリー情報は、募集要項が「誰もが自律的に安心して移動できる包摂社会」を掲げて推奨しているデータである。だがその整備は首都圏の駅周辺に集中していて、<strong>地方でバリアフリー経路案内を作ることはできない</strong>。高齢化率が高いのは地方の側なので、必要と供給が逆を向いている。</p></div>
+</div>
+</section>
+<section class="wrap">
+<span class="sec-no">07 — 読み方</span>
+<h2>この数字の限界</h2>
+<ul class='fine-list'>
+<li><strong>「無い」は確認できた範囲の話。</strong>事業者が自社サイトだけで公開している可能性は残る。</li>
+<li>都道府県の割り当ては行政界のポリゴンではなく、<strong>最も近いバス停の都道府県</strong>で代用している。27.8万点あるので人の住む所ではまず外さないが、離島などで揺れうる。</li>
+<li>県をまたぐ鉄道路線は、通る県それぞれで1本と数えている。県ごとの数を足しても全国の路線数（597）にはならない。</li>
+<li>「乗換案内が作れる」は<strong>静的データが両モードにある</strong>という意味で、実際の乗換に足る品質があるかまでは見ていない。</li>
+<li>PLATEAU の地域数は G空間情報センターのデータセット名から数えた。地図上の位置は配布範囲の中心なので、市域そのものではない。</li>
+<li>Project LINKS と連携先のデータは、場所の軸で数えていない。全国一律か、地域の概念を持たないため。</li>
+<li>バスの母集団 P11 は2022年、オープンデータ側は2026年。4年のずれがある。</li>
+</ul>
+<p>元になった集計は <a href="data/region_capability.csv">region_capability.csv</a> としてそのまま公開している。数字を疑ったら、そこを見てほしい。</p>
+</section>
+</main>
+<footer class="wrap">
+出典——<a href="https://challenge2026.odpt.org/ja/outline.html">公共交通オープンデータチャレンジ2026 開催概要</a>、<a href="https://challenge2026.odpt.org/ja/opendata.html">同 公開するオープンデータ</a>、国土数値情報 N02-24 / P11-22 / C28-21 / 500mメッシュ別将来推計人口（国土交通省）、公共交通オープンデータセンター、GTFSデータリポジトリ、歩行空間ナビ・プロジェクト、G空間情報センター（PLATEAU）。すべて <span class="mono">2026-09-09</span> 時点。<br>
+<a href="./">交通データ白地図</a> ／ <a href="map.html">交通データ夜景図</a> ／ <a href="concept.html">企画書</a> ／ <a href="data/">カバレッジデータ</a>
+</footer>
+</body>
+</html>

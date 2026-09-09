@@ -213,6 +213,26 @@
     if (BUSPTS[st].length) PT_DATA.bus[st] = { xy: BUSPTS[st], names: BUS_NAMES[st] || [] };
   });
 
+  // ── チャレンジで使える、公共交通以外のデータ ──────────────
+  // ほこナビと PLATEAU。**所在の4分類には載せない。**
+  // ODPT にあるか否かという問いの外側にあるデータで、母集団も定義できない。
+  // 別の色で「あるかないか」だけを示す。
+  // 連携先（気象庁・警察庁・e-Stat 等）は全国一律なので地図にしても真っ白になる。
+  var EXTRA = JSON.parse(document.getElementById('extra').textContent);
+  var EXTRA_IDS = ['hokonavi', 'plateau'];
+  var EXTRA_ST = '—';        // ORDER4 に無いキー。所在の絞り込みを素通りする
+  var EXTRA_HEX = { hokonavi: '#4FC98A', plateau: '#DB6EA8' };
+  var EXTRA_RGB = { hokonavi: [0.310, 0.788, 0.541], plateau: [0.859, 0.431, 0.659] };
+  EXTRA_IDS.forEach(function (id) {
+    var a = decode(EXTRA[id].pts);
+    on[id] = true;
+    PT_BUF[id] = {};
+    PT_DATA[id] = {};
+    if (!a.length) return;
+    PT_BUF[id][EXTRA_ST] = buffer(a);
+    PT_DATA[id][EXTRA_ST] = { xy: a, names: EXTRA[id].names || [] };
+  });
+
   // 画面上で最も近い点を拾う。格子はメルカトル座標で切る
   var PCELL = 0.0012;
   var PIDX = {};
@@ -387,6 +407,18 @@
       });
     });
 
+    // 公共交通以外のデータ。交通機関より下に置くと埋もれるので、上に薄く重ねる
+    EXTRA_IDS.forEach(function (id) {
+      var b = PT_BUF[id] && PT_BUF[id][EXTRA_ST];
+      if (!on[id] || !b) return;
+      var sz = id === 'plateau' ? 4.0 : 1.8;
+      var size = Math.max(sz, Math.min(sz * 6, sz * Math.pow(z, 0.62)));
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      drawBuf(b, gl.POINTS, EXTRA_RGB[id], 0.12, size * 2.2, null, true);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      drawBuf(b, gl.POINTS, EXTRA_RGB[id], 0.9, size, null, true);
+    });
+
     // 海岸線をごく薄く上からもなぞる。下に敷くだけだと密な点群に埋もれて
     // 輪郭が読めなくなるため。濃度は低く保ち、データと見紛わせないようにする。
     if (on.coast && COAST_BUF) {
@@ -485,6 +517,18 @@
     var parts = (pt.name || '').split('｜');
     var head = parts[0] || MODE_LABEL[pt.mode] || '';
     var sub = parts.slice(1).filter(Boolean).join(' / ');
+    // 公共交通以外のデータは所在の軸に載らない。何のデータかだけを出す
+    if (EXTRA_HEX[pt.mode]) {
+      info.innerHTML =
+        '<p class="ttl">' + esc(head) + '</p>' +
+        '<span class="badge" style="color:' + EXTRA_HEX[pt.mode] + '">' +
+        esc(EXTRA[pt.mode].label) + '</span>' +
+        '<dl><dt>種類</dt><dd>' + esc(sub || EXTRA[pt.mode].label) + '</dd>' +
+        '<dt>公開範囲</dt><dd class="mono">' +
+        EXTRA[pt.mode].count.toLocaleString('ja-JP') + ' ' +
+        esc(EXTRA[pt.mode].unit) + '</dd></dl>';
+      return;
+    }
     info.innerHTML =
       '<p class="ttl">' + esc(head || MODE_LABEL[pt.mode]) + '</p>' +
       '<span class="badge" style="color:' + HEX[pt.status] + '">' +
@@ -551,6 +595,29 @@
       render();
     });
   });
+
+  // 公共交通以外のデータ。所在の内訳は無いので、件数だけを並べる
+  var exEl = document.getElementById('extrakeys');
+  exEl.innerHTML = EXTRA_IDS.map(function (id) {
+    var v = EXTRA[id];
+    return '<button class="row" data-x="' + id + '" aria-pressed="true">' +
+           '<span class="row-h"><b><i class="dot" style="background:' +
+           EXTRA_HEX[id] + '"></i>' + v.label + '</b><span>' +
+           fmt(v.count) + ' ' + v.unit + '</span></span></button>';
+  }).join('');
+  Array.prototype.forEach.call(exEl.querySelectorAll('.row'), function (k) {
+    k.addEventListener('click', function () {
+      var id = k.dataset.x;
+      on[id] = !on[id];
+      k.setAttribute('aria-pressed', String(on[id]));
+      render();
+    });
+  });
+  document.getElementById('extra-foot').textContent =
+    'チャレンジ2026 は ODPT と GTFSデータリポジトリ以外のデータも公開しています。'
+    + 'このうち場所によって有無があるのがこの2つ。'
+    + '所在（ODPT／ODPT外）の軸には載らないため、別の色で示しています。'
+    + '気象庁・警察庁・e-Stat などの連携データは全国一律なので載せていません。';
 
   document.getElementById('legend-foot').textContent =
     '数字は左から ODPT ／ ODPT（期間限定）／ ODPT外 ／ なし。帯はその割合。'

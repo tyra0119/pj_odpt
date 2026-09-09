@@ -10,7 +10,9 @@
   --lit:#4BDBF7;      /* 通年オープン */
   --temp:#F5B855;     /* 期間限定 */
   --alt:#8E7BE0;      /* ODPT外にあり */
-  --void:#3C5568;     /* データなし */
+  --void:#3A5670;     /* データなし */
+  --hoko:#4FC98A;     /* ほこナビ（公共交通以外・別軸） */
+  --plateau:#DB6EA8;  /* PLATEAU（同上） */
 }
 *{box-sizing:border-box}
 body{
@@ -62,6 +64,11 @@ header{
 .skey:focus-visible{outline:1px solid var(--lit); outline-offset:1px}
 .skey[aria-pressed="false"]{opacity:.32}
 .skey i{width:9px; height:9px; border-radius:2px; display:block}
+/* 公共交通以外のデータの行に付ける色の丸 */
+.row-h i.dot{
+  width:8px; height:8px; border-radius:50%; display:inline-block;
+  margin-right:.4rem; vertical-align:baseline;
+}
 
 /* 交通機関の行 */
 .row{
@@ -149,6 +156,9 @@ footer b{color:var(--ink-2); font-weight:500}
     <div id="statuskeys"></div>
     <h2 class="mt">交通機関ごとの内訳</h2>
     <div id="keys"></div>
+    <h2 class="mt">チャレンジで使える他のデータ</h2>
+    <div id="extrakeys"></div>
+    <p class="foot" id="extra-foot"></p>
     <p class="foot" id="legend-foot"></p>
   </aside>
 
@@ -183,4 +193,5 @@ footer b{color:var(--ink-2); font-weight:500}
 <script id="coast" type="application/json">/*__COAST__*/</script>
 <script id="summary" type="application/json">/*__SUMMARY__*/</script>
 <script id="pref" type="application/json">/*__PREF__*/</script>
+<script id="extra" type="application/json">/*__EXTRA__*/</script>
 <!--__ENGINE__-->
