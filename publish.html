@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>データを公開するには</title>
+<meta name="description" content="交通事業者・自治体が運行情報をオープンデータとして公開するときの、仕様・手順・公開先・費用・窓口をまとめたもの。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --ink:#131B23; --ink-2:#4E5C69; --ink-3:#7C8A97;
+  --rule:#D3DBE2; --rule-2:#E5EBEF;
+  --accent:#0C7488; --accent-wash:#DDEEF2;
+  --free:#1F7A5A; --draft:#A96A0C; --none:#8D9BA7;
+  --measure:44rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+    --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+    --rule:#26333D; --rule-2:#1D2831;
+    --accent:#4FC3DC; --accent-wash:#14313A;
+    --free:#5FCFA4; --draft:#E9AE5E; --none:#67757F;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141A; --surface:#141D25; --surface-2:#101922;
+  --ink:#E3EBF1; --ink-2:#A2B1BD; --ink-3:#76838F;
+  --rule:#26333D; --rule-2:#1D2831;
+  --accent:#4FC3DC; --accent-wash:#14313A;
+  --free:#5FCFA4; --draft:#E9AE5E; --none:#67757F;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--measure); margin:0 auto; padding:0 1.4rem}
+h1,h2,h3{font-family:"Zen Old Mincho",serif; text-wrap:balance; letter-spacing:.02em; margin:0}
+h1{font-size:clamp(2.1rem,6.5vw,3rem); font-weight:900; line-height:1.25}
+h2{font-size:1.4rem; font-weight:700; line-height:1.5; margin:0 0 .5rem}
+h3{font-size:1rem; font-weight:700; margin:2rem 0 .4rem}
+p{margin:0 0 1.05em}
+a{color:var(--accent)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .3rem
+}
+header{padding:4rem 0 2.4rem; border-bottom:1px solid var(--rule)}
+.lede{font-size:1.05rem; color:var(--ink-2); margin-top:1.1rem}
+.lede em{font-style:normal; color:var(--ink); font-weight:700;
+  box-shadow:inset 0 -.5em 0 var(--accent-wash)}
+section{padding:2.8rem 0; border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+.sec-no{
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.14em;
+  color:var(--ink-3); display:block; margin-bottom:.5rem
+}
+
+/* 表 */
+.tw{overflow-x:auto; margin:1.3rem 0}
+table{border-collapse:collapse; width:100%; font-size:.87rem; min-width:24rem}
+th,td{padding:.55rem .7rem; text-align:left; border-bottom:1px solid var(--rule-2);
+  vertical-align:top}
+thead th{font-size:.72rem; letter-spacing:.06em; color:var(--ink-3); font-weight:500;
+  border-bottom:1px solid var(--rule); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.mode{font-weight:700; white-space:nowrap}
+
+/* 状態のしるし */
+.tag{
+  display:inline-block; font-size:.72rem; font-family:"IBM Plex Mono",monospace;
+  padding:.05rem .45rem; border:1px solid currentColor; border-radius:2px;
+  white-space:nowrap; line-height:1.6
+}
+.tag.ok{color:var(--free)} .tag.draft{color:var(--draft)} .tag.no{color:var(--none)}
+
+/* 手順 */
+ol.steps{list-style:none; counter-reset:s; margin:1.4rem 0 0; padding:0}
+ol.steps>li{
+  counter-increment:s; position:relative; padding:0 0 1.4rem 3rem;
+  border-left:1px solid var(--rule); margin-left:.9rem
+}
+ol.steps>li:last-child{border-left-color:transparent; padding-bottom:0}
+ol.steps>li::before{
+  content:counter(s); position:absolute; left:-.9rem; top:0;
+  width:1.8rem; height:1.8rem; border-radius:50%;
+  background:var(--surface); border:1px solid var(--rule); color:var(--accent);
+  font-family:"IBM Plex Mono",monospace; font-size:.8rem; font-weight:600;
+  display:grid; place-items:center
+}
+ol.steps b{display:block; font-size:1rem; margin-bottom:.2rem}
+ol.steps p{font-size:.9rem; color:var(--ink-2); margin:0 0 .5em}
+ul.docs{list-style:none; margin:.5rem 0 0; padding:0; font-size:.86rem}
+ul.docs li{padding:.3rem 0; border-top:1px solid var(--rule-2)}
+ul.docs li:first-child{border-top:0}
+ul.docs .y{color:var(--ink-3); font-family:"IBM Plex Mono",monospace; font-size:.78rem;
+  margin-left:.4rem}
+
+/* 注記 */
+.note{
+  font-size:.85rem; color:var(--ink-2); border-left:2px solid var(--accent);
+  padding:.1rem 0 .1rem 1rem; margin:1.4rem 0
+}
+.note p:last-child{margin-bottom:0}
+.card{
+  background:var(--surface); border:1px solid var(--rule); padding:1.1rem 1.2rem;
+  margin:1.3rem 0
+}
+.card p:last-child{margin-bottom:0}
+.card dt{font-weight:700; font-size:.9rem; margin-top:.6rem}
+.card dt:first-child{margin-top:0}
+.card dd{margin:0 0 .2rem; font-size:.88rem; color:var(--ink-2)}
+footer{border-top:1px solid var(--rule); padding:1.8rem 0 4rem;
+  font-size:.78rem; color:var(--ink-3); line-height:1.9}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <p class="eyebrow">交通データ白地図</p>
+  <h1>データを公開するには</h1>
+  <p class="lede">
+    地図で「なし」と出ている路線・停留所の事業者に向けて、
+    運行情報をオープンデータとして公開するときの
+    <em>仕様・手順・公開先・費用・窓口</em>をまとめたものです。
+  </p>
+  <p class="lede" style="font-size:.92rem">
+    このサイトは申請を代行しません。<strong>調べる手間を肩代わりするだけ</strong>です。
+    実際の判断と手続きは事業者のものです。
+  </p>
+</header>
+
+<main>
+
+<section class="wrap">
+  <span class="sec-no">01 — 前提</span>
+  <h2>いま、標準が5モード分に広がろうとしている</h2>
+  <p>
+    これまで国内の標準は「標準的なバス情報フォーマット」、つまり<strong>バスだけ</strong>でした。
+    それが <strong>公共交通運行情報標準データ仕様（GTFS-JP シリーズ）</strong> として
+    改訂されつつあり、対象が広がります。
+  </p>
+  <div class="card">
+    <p style="font-size:.9rem;margin-bottom:.7rem">
+      仕様書 1.1 が定める対象は
+      <strong>鉄道・バス・旅客船・デマンド型交通・シェアモビリティサービス</strong>。
+      経緯として、バスの第3版を改訂したうえで
+    </p>
+    <dl style="margin:0">
+      <dt>鉄道</dt><dd>対象モードとして追加</dd>
+      <dt>旅客船</dt><dd>「標準的なフェリー・旅客船航路情報フォーマット」を統合して追加</dd>
+      <dt>シェアモビリティ・デマンド型交通</dt>
+      <dd>GBFS と GTFS-Flex のローカライズ仕様を追加して対象化</dd>
+    </dl>
+  </div>
+  <p>
+    この地図が扱う6モードのうち、<strong>航空を除く5つが1本の仕様に載る</strong>ということです。
+    「うちのモードには標準が無いから」という理由は、もうすぐ使えなくなります。
+  </p>
+  <div class="note">
+    <p>
+      <strong>ただし現時点では素案です。</strong>公開されている版は 2026年1月27日修正の素案で、
+      表紙の日付は「令和8年●月」のまま確定していません。
+      いま手を動かすなら、下の「確定している資料」から始めるのが安全です。
+    </p>
+  </div>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">02 — モード別</span>
+  <h2>あなたのモードは、いまどれを使うのか</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>モード</th><th>いま使う仕様</th><th>状態</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mode">バス</td>
+          <td>標準的なバス情報フォーマット（GTFS-JP）第3版<br>
+            動的は GTFS リアルタイム</td>
+          <td><span class="tag ok">確定</span></td>
+        </tr>
+        <tr>
+          <td class="mode">フェリー<br>旅客船</td>
+          <td>標準的なフェリー・旅客船航路情報フォーマット Ver 5.1.2</td>
+          <td><span class="tag ok">確定</span></td>
+        </tr>
+        <tr>
+          <td class="mode">鉄道</td>
+          <td>GTFS-JP シリーズで対象化<br>
+            現状は ODPT へのデータ提供が実務上の入口</td>
+          <td><span class="tag draft">素案</span></td>
+        </tr>
+        <tr>
+          <td class="mode">デマンド交通</td>
+          <td>GTFS-Flex のローカライズ仕様</td>
+          <td><span class="tag draft">素案</span></td>
+        </tr>
+        <tr>
+          <td class="mode">シェアサイクル</td>
+          <td>GBFS 日本標準仕様書</td>
+          <td><span class="tag draft">素案</span></td>
+        </tr>
+        <tr>
+          <td class="mode">航空</td>
+          <td>国内の運行情報標準は無い</td>
+          <td><span class="tag no">なし</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.88rem;color:var(--ink-2)">
+    素案の3モードも、GTFS-Flex / GBFS は国際標準としてはすでに実在します。
+    仕様の確定を待たずに作れます。
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">03 — 手順</span>
+  <h2>作る、置く、使ってもらう</h2>
+  <ol class="steps">
+    <li>
+      <b>読む</b>
+      <p>入門から入って、整備の手引きへ進みます。いずれも国土交通省が出しています。</p>
+      <ul class="docs">
+        <li>はじめよう！「標準的なバス情報フォーマット」【第2版】<span class="y">2021-09</span></li>
+        <li>「標準的なバス情報フォーマット」データ整備の手引き【第2版】<span class="y">2021-09</span></li>
+        <li>「標準的なバス情報フォーマット」ダイジェスト【第2版】<span class="y">2021-09</span></li>
+        <li>バスデータの整備・活用事例【第2版】<span class="y">2021-09</span></li>
+      </ul>
+      <p style="margin-top:.6rem">
+        すべて
+        <a href="https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000067.html">
+          公共交通運行情報標準データ（GTFS-JP）に関する資料・検討会</a>
+        にまとまっています。
+      </p>
+    </li>
+    <li>
+      <b>作る</b>
+      <p>
+        時刻表・停留所・運賃を GTFS-JP の形に整えます。
+        表計算から変換するツールが複数あり、事業者コミュニティの
+        <a href="https://www.gtfs.jp/">GTFS.JP</a> に情報が集まっています。
+      </p>
+    </li>
+    <li>
+      <b>置く</b>
+      <p>
+        <a href="https://gtfs-data.jp/">GTFSデータリポジトリ</a>
+        に登録すれば、固定URL・時系列保存・品質検証つきで公開できます。<strong>無償</strong>です。
+        すでに380余りの事業者・市町村が使っています。
+        鉄道であれば
+        <a href="https://www.odpt.org/">公共交通オープンデータ協議会</a>
+        へのデータ提供が実務上の入口になります。
+      </p>
+    </li>
+    <li>
+      <b>届ける</b>
+      <p>
+        経路検索事業者に使ってもらうところまでが目的です。
+        「経路検索事業者等へのデータ提供の手引き【第2版】」と
+        「バス情報配信方法ガイドライン【第2版】」が、
+        そのための手順書になっています。
+      </p>
+    </li>
+  </ol>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">04 — 費用</span>
+  <h2>いくらかかるのか</h2>
+  <p>
+    ここが誤解されやすいところです。<strong>公開する側の費用は、基本的にかかりません。</strong>
+  </p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>公開先</th><th>費用</th><th>条件</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mode">GTFSデータリポジトリ<br>
+            <span class="mono" style="font-size:.78rem;font-weight:400">gtfs-data.jp</span></td>
+          <td><span class="tag ok">無償</span></td>
+          <td>交通事業者・自治体等が無償でオープンデータとして登録・公開できる</td>
+        </tr>
+        <tr>
+          <td class="mode">公共交通オープン<br>データ協議会</td>
+          <td><span class="tag ok">実質無償</span></td>
+          <td>一般会員は年会費30万円（1口）だが、<strong>無償でデータ提供する場合は
+            1口の会費を支払ったものとみなす</strong></td>
+        </tr>
+        <tr>
+          <td class="mode">同上<br>（自治体・大学）</td>
+          <td><span class="tag ok">無料</span></td>
+          <td>地方公共団体会員・アカデミック会員は会費無料</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.88rem;color:var(--ink-2)">
+    かかるのはお金ではなく、最初にデータを整える手間です。
+    そこは運輸局や自治体の整備支援、コミュニティの説明会が受け皿になっています。
+  </p>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">05 — 窓口</span>
+  <h2>誰に聞けばいいのか</h2>
+  <div class="card">
+    <dl style="margin:0">
+      <dt>公共交通オープンデータ協議会 事務局</dt>
+      <dd>入会・データ提供の相談。入会申請は「ODPT会員ポータル」から。<br>
+        TEL <span class="mono">03-6426-9192</span> ／
+        <span class="mono">odpt-office@ubin.jp</span></dd>
+      <dt>一般社団法人日本バス情報協会</dt>
+      <dd>GTFSデータリポジトリの企画・運営協力。
+        説明会・ユーザー会を定期開催しており、初任者向けの回もある。<br>
+        <a href="https://www.busdata.or.jp/">busdata.or.jp</a></dd>
+      <dt>GTFS.JP</dt>
+      <dd>事業者・自治体・技術者のコミュニティ。作成ツールや事例が集まる。<br>
+        <a href="https://www.gtfs.jp/">gtfs.jp</a></dd>
+      <dt>地方運輸局</dt>
+      <dd>GTFS-JP データの整備支援を行っている局がある。管轄の局へ。</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="wrap">
+  <span class="sec-no">06 — この地図の側</span>
+  <h2>まちがっていたら直します</h2>
+  <p>
+    この地図の「なし」は<strong>確認できた範囲で見つからなかった</strong>という意味です。
+    自社サイトで公開されているものを見落としている可能性は残ります。
+  </p>
+  <p>
+    判定の元になったデータは
+    <a href="data/">カバレッジデータ</a> としてそのまま公開しています。
+    誤りを見つけたら、そこを直せば地図も直ります。
+  </p>
+</section>
+
+</main>
+
+<footer class="wrap">
+  出典——
+  <a href="https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000067.html">公共交通運行情報標準データ（GTFS-JP）に関する資料・検討会</a>（国土交通省）、
+  公共交通運行情報標準データ仕様（GTFS-JP シリーズ）データ仕様書 素案（2026-01-27 修正）、
+  <a href="https://www.odpt.org/admission/">入会のご案内</a>（公共交通オープンデータ協議会）、
+  <a href="https://www.busdata.or.jp/">一般社団法人日本バス情報協会</a>、
+  <a href="https://www.gtfs.jp/">GTFS.JP</a>。
+  <span class="mono">2026-09-09</span> 時点。<br>
+  <a href="./">交通データ白地図</a> ／
+  <a href="map.html">交通データ夜景図</a> ／
+  <a href="concept.html">企画書</a> ／
+  <a href="data/">カバレッジデータ</a>
+</footer>
+
+</body>
+</html>

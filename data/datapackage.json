@@ -83,7 +83,7 @@
      },
      {
       "name": "status",
-      "description": "データの所在。通年オープン／期間限定／ODPT外にあり／データなし"
+      "description": "データの所在。値は 通年オープン／期間限定／ODPT外にあり／データなし（地図では ODPT／ODPT（期間限定）／ODPT外／なし と表記）"
      },
      {
       "name": "status_after",

@@ -128,6 +128,7 @@ header{
   font:inherit; font-size:.72rem; padding:.3rem .7rem; cursor:pointer; white-space:nowrap;
   background:transparent; color:var(--lit); border:1px solid var(--lit); border-radius:2px;
 }
+#info .act a{color:var(--lit); text-decoration:underline; text-underline-offset:2px}
 #info .act button:hover{background:rgba(75,219,247,.12)}
 #info .act button:focus-visible{outline:2px solid var(--lit); outline-offset:2px}
 #info .act button.done{color:var(--ink-2); border-color:var(--rule)}
@@ -212,7 +213,7 @@ footer b{color:var(--ink-2); font-weight:500}
     '通年オープン': [0.294, 0.859, 0.969],
     '期間限定': [0.961, 0.722, 0.333],
     'ODPT外にあり': [0.557, 0.482, 0.878],
-    'データなし': [0.235, 0.333, 0.408]
+    'データなし': [0.227, 0.337, 0.439]
   };
   // 画面に出す名前。データ側のキーは触らず、表示だけを「所在」の言い方に揃える
   var LABEL = {
@@ -223,7 +224,7 @@ footer b{color:var(--ink-2); font-weight:500}
   };
   var HEX = {
     '通年オープン': '#4BDBF7', '期間限定': '#F5B855',
-    'ODPT外にあり': '#8E7BE0', 'データなし': '#3C5568'
+    'ODPT外にあり': '#8E7BE0', 'データなし': '#3A5670'
   };
 
   function mx(lon) { return (lon + 180) / 360; }
@@ -530,16 +531,18 @@ footer b{color:var(--ink-2); font-weight:500}
 
     // 海岸線は交通機関より下に敷く。1pxのままだと上に載る点群に埋もれるので、
     // 微小にずらした2回描きで太らせ、輪郭として読める明るさにする。
+    // 色は暖色寄りのニュートラル。交通データは全て寒色なので、色相で
+    // 「土台」と「データ」を分ける。青灰にすると「データなし」と混ざる。
     if (on.coast && COAST_BUF) {
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      var cc = [0.16, 0.24, 0.32];
+      var cc = [0.243, 0.233, 0.216];
       // 上下左右にごく僅かずらして太らせる。斜め1方向だけだと二重線に見える
       for (var ci = 1; ci < HALO.length; ci++) {
         drawBuf(COAST_BUF, gl.LINES, cc, 0.45, 1, halo(ci, ws), false);
       }
       drawBuf(COAST_BUF, gl.LINES, cc, 1, 1, null, false);
       // 県境は海岸線より一段暗く。位置の手がかりであって主役ではない
-      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.12, 0.18, 0.24], 1, 1, null, false);
+      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.180, 0.171, 0.157], 1, 1, null, false);
     }
 
     // 暗いものを先に、明るいものを後に重ねる
@@ -588,8 +591,8 @@ footer b{color:var(--ink-2); font-weight:500}
     // 輪郭が読めなくなるため。濃度は低く保ち、データと見紛わせないようにする。
     if (on.coast && COAST_BUF) {
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      drawBuf(COAST_BUF, gl.LINES, [0.38, 0.48, 0.58], 0.22, 1, null, false);
-      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.34, 0.43, 0.52], 0.16, 1, null, false);
+      drawBuf(COAST_BUF, gl.LINES, [0.451, 0.431, 0.400], 0.24, 1, null, false);
+      if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.380, 0.361, 0.333], 0.17, 1, null, false);
     }
 
     if (hover && on.rail) {
@@ -680,28 +683,41 @@ footer b{color:var(--ink-2); font-weight:500}
   var MODE_LABEL = {};
 
   // ── 「なし」で終わらせないための導線 ──────────────────────
-  // 地図は「無い」を示すところまでしかできない。次に誰が何をすれば
-  // 埋まるのかを、その場で持ち帰れる形にする。
+  // この地図は申請を代行しない。事業者が自分で公開しようとしたときに、
+  // 調べる手間だけを肩代わりする。だから出すのは依頼ではなく **情報** で、
+  // 手順・費用・窓口をまとめた publish.html への入口として置く。
+  // アーティファクトとしても配るので、リンクは公開URLの絶対パスにする。
+  var SITE = 'https://tyra0119.github.io/pj_odpt/';
+
   function requestText(who, what) {
     return [
       (who || '（事業者名）') + ' ご担当者さま',
       '',
-      'いつも' + (what || '公共交通') + 'を利用しております。',
-      '貴社（貴自治体）の運行情報について、',
-      '「標準的なバス情報フォーマット（GTFS-JP）」等の機械可読な形式での',
-      'オープンデータ公開をご検討いただけないでしょうか。',
+      (what || '運行情報') + 'をオープンデータとして公開する方法について、',
+      '公開されている資料と窓口をまとめたものがあります。',
+      'ご検討の材料になれば幸いです。',
       '',
-      '公開されると、経路検索アプリや地図サービスに自動的に反映され、',
-      '利用者が経路を調べられるようになります。時刻表改正の周知も容易になります。',
+      '■ 仕様と手引き（国土交通省）',
+      '  公共交通運行情報標準データ（GTFS-JP）に関する資料・検討会',
+      '  https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000067.html',
+      '  入門は「はじめよう！標準的なバス情報フォーマット」から',
       '',
-      '公開の手引き:',
-      '  国土交通省「標準的なバス情報フォーマット」',
-      '  https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000111.html',
-      '  GTFSデータリポジトリ（登録先）',
+      '■ 公開先（いずれも公開側の費用はかかりません）',
+      '  GTFSデータリポジトリ … 無償で登録・公開。固定URL・品質検証つき',
       '  https://gtfs-data.jp/',
+      '  公共交通オープンデータ協議会 … 無償でデータ提供する場合、',
+      '  一般会員の年会費は1口分を支払ったものとみなされます',
+      '  https://www.odpt.org/admission/',
       '',
-      '近隣の同規模の事業者・自治体でも公開が進んでいます。',
-      'ご検討のほど、よろしくお願いいたします。'
+      '■ 相談窓口',
+      '  公共交通オープンデータ協議会 事務局',
+      '  TEL 03-6426-9192 / odpt-office@ubin.jp',
+      '',
+      '■ 手順・費用・窓口のまとめ',
+      '  ' + SITE + 'publish.html',
+      '',
+      '※ この案内は「交通データ白地図」が自動で組み立てたものです。',
+      '　 すでに公開されている場合は行き違いですのでご容赦ください。'
     ].join('\n');
   }
 
@@ -710,9 +726,11 @@ footer b{color:var(--ink-2); font-weight:500}
     var id = 'act' + (++actSeq);
     ACT_PENDING = { id: id, text: requestText(who, what) };
     return '<span class="act"><p>この' +
-      (what || '路線') + 'のデータはどこにも見つかりません。' +
-      '公開を働きかける文面を用意しました。</p>' +
-      '<button type="button" id="' + id + '">依頼文をコピー</button></span>';
+      (what || '路線') + 'のデータは、確認できた範囲では見つかりません。' +
+      '公開するときの手順・費用・窓口は' +
+      '<a href="' + SITE + 'publish.html" target="_blank" rel="noopener">' +
+      'こちらにまとめてあります</a>。</p>' +
+      '<button type="button" id="' + id + '">案内をコピー</button></span>';
   }
   var ACT_PENDING = null;
   function bindAction() {
