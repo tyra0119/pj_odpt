@@ -167,7 +167,7 @@ footer{
 <span class="sec-no">02 — 二種類</span>
 <h2>場所を選ぶデータと、選ばないデータ</h2>
 <p>公開されているデータは、性質が二つに割れる。<strong>どこにあるかが問題になるもの</strong>と、<strong>全国どこでも同じように使えるもの</strong>である。この地図が扱えるのは前者だけで、後者は白地図にならない。</p>
-<div class="tw"><table><thead><tr><th>データ</th><th>地域の広がり</th><th>測った値</th></tr></thead><tbody><tr><td><strong>公共交通オープンデータセンター</strong></td><td>偏りが大きい</td><td>鉄道 22県 ／ バス 36県</td></tr><tr><td><strong>GTFSデータリポジトリ</strong></td><td>バスは全国</td><td>バス 47都道府県すべて</td></tr><tr><td><strong>ほこナビ</strong></td><td>極端に偏る</td><td>31件中 24件が東京・神奈川</td></tr><tr><td><strong>PLATEAU</strong></td><td>全国に散る</td><td>306地域 ／ 45都道府県</td></tr><tr><td><strong>Project LINKS</strong></td><td>行政情報のため場所の軸を持たない</td><td>—</td></tr><tr><td><strong>連携先（e-Stat・気象庁・警察庁・国土地理院）</strong></td><td>全国一律</td><td>地域差なし</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>データ</th><th>地域の広がり</th><th>測った値</th></tr></thead><tbody><tr><td><strong>公共交通オープンデータセンター</strong></td><td>偏りが大きい</td><td>鉄道 22県 ／ バス 36県</td></tr><tr><td><strong>GTFSデータリポジトリ</strong></td><td>バスは全国</td><td>バス 47都道府県すべて</td></tr><tr><td><strong>ほこナビ</strong></td><td>極端に偏る</td><td>31件中 24件が東京・神奈川</td></tr><tr><td><strong>PLATEAU</strong></td><td>全国に散る</td><td>307地域 ／ 45都道府県</td></tr><tr><td><strong>Project LINKS</strong></td><td>行政情報のため場所の軸を持たない</td><td>—</td></tr><tr><td><strong>連携先（e-Stat・気象庁・警察庁・国土地理院）</strong></td><td>全国一律</td><td>地域差なし</td></tr></tbody></table></div>
 <div class="note"><p>だから<strong>「データが無いから何も作れない」は言い過ぎ</strong>になる。全国一律のデータはどこでも使えるし、バスは47都道府県すべてにある。問題は<strong>作れるものの種類が場所によって変わる</strong>ことである。</p></div>
 </section>
 <section class="wrap">
@@ -200,9 +200,9 @@ footer{
 <p>バスのオープンデータは<strong>47都道府県すべてにある</strong>。鉄道は27県しかない。つまり、作れない20県は<strong>例外なく鉄道側が理由</strong>である。逆——鉄道はあるがバスが無い県——は0県だった。</p>
 <div class="tw"><table><thead><tr><th>県</th><th class="n">人口</th><th class="n">データの無い鉄道路線</th><th class="n">その駅数</th><th class="n">使えるバス停</th><th class="n">PLATEAU</th><th class="n">ほこナビ</th></tr></thead><tbody>
 <tr><td>兵庫県</td><td class="n">544万人</td><td class="n">40</td><td class="n">667</td><td class="n">3,130</td><td class="n">5</td><td class="n">1</td></tr>
-<tr><td>北海道</td><td class="n">522万人</td><td class="n">26</td><td class="n">462</td><td class="n">1,009</td><td class="n">5</td><td class="n">—</td></tr>
+<tr><td>北海道</td><td class="n">522万人</td><td class="n">26</td><td class="n">462</td><td class="n">1,009</td><td class="n">3</td><td class="n">—</td></tr>
 <tr><td>福岡県</td><td class="n">509万人</td><td class="n">28</td><td class="n">600</td><td class="n">2,290</td><td class="n">9</td><td class="n">—</td></tr>
-<tr><td>広島県</td><td class="n">282万人</td><td class="n">16</td><td class="n">407</td><td class="n">67</td><td class="n">6</td><td class="n">—</td></tr>
+<tr><td>広島県</td><td class="n">282万人</td><td class="n">16</td><td class="n">407</td><td class="n">67</td><td class="n">7</td><td class="n">—</td></tr>
 <tr><td>岡山県</td><td class="n">190万人</td><td class="n">16</td><td class="n">400</td><td class="n">2,119</td><td class="n">5</td><td class="n">—</td></tr>
 <tr><td>鹿児島県</td><td class="n">158万人</td><td class="n">12</td><td class="n">399</td><td class="n">1,210</td><td class="n">1</td><td class="n">—</td></tr>
 <tr><td>沖縄県</td><td class="n">146万人</td><td class="n">1</td><td class="n">19</td><td class="n">164</td><td class="n">1</td><td class="n">—</td></tr>
@@ -236,7 +236,7 @@ footer{
 <div class="props">
 <div class="prop"><p class="tag">鉄道の静的データ</p><h3>兵庫県・北海道・福岡県・岡山県 に1事業者ぶん</h3><p>この20県のうち16県は、バス側に数百〜数千の停留所ぶんのデータが既にある。鉄道の時刻表と駅が機械可読な形で1つ入るだけで、<strong>乗換案内が成立する県が増える</strong>。上位4県だけで1,764万人。<em>追加コストあたりの効き目が、全国でいちばん大きい場所である。</em></p></div>
 <div class="prop"><p class="tag">重なりが一枚足りない場所</p><h3>兵庫県・香川県・福井県——歩行空間データはあるのに、鉄道が無い</h3><p>ほこナビの歩行空間ネットワークは、地方では数えるほどしかない。その少ない地方の例が兵庫県・香川県・福井県にある。ところが同じ県に鉄道のオープンデータが無いため、<strong>駅までの経路と、駅からの移動が、つながらない</strong>。段差を避けた経路案内という、ほこナビが想定するそのままの使い方が、鉄道データ一枚で完成する場所である。</p></div>
-<div class="prop"><p class="tag">組み合わせを変える</p><h3>乗換案内が作れない20県のうち、19県に PLATEAU がある</h3><p>合計64地域。鉄道データが無くても、<strong>バス＋3D都市モデル＋全国一律のデータ</strong>（気象、交通事故統計、メッシュ人口）で組める題材はある。浸水時のバス経路、事故多発地点と停留所の関係、人口減少と路線網の重ね合わせ——いずれも鉄道の時刻表を必要としない。<em>「地方だから作れない」ではなく、「地方で作れるものが違う」。</em></p></div>
+<div class="prop"><p class="tag">組み合わせを変える</p><h3>乗換案内が作れない20県のうち、19県に PLATEAU がある</h3><p>合計63地域。鉄道データが無くても、<strong>バス＋3D都市モデル＋全国一律のデータ</strong>（気象、交通事故統計、メッシュ人口）で組める題材はある。浸水時のバス経路、事故多発地点と停留所の関係、人口減少と路線網の重ね合わせ——いずれも鉄道の時刻表を必要としない。<em>「地方だから作れない」ではなく、「地方で作れるものが違う」。</em></p></div>
 <div class="prop"><p class="tag">デマンド交通</p><h3>ODPT への集約だけで、1県が9県になる</h3><p>デマンド交通は募集要項が名指ししているモードだが、ODPT に通年で置かれているのは1県だけ。同じデータが <span class='mono'>gtfs-data.jp</span> には 2,579件ある。<strong>新しく作らなくていい。すでにあるものが、片方にしか無い。</strong>集約されれば「交通空白×デマンド交通」という、募集要項が想定するそのままのテーマが成立する。</p></div>
 <div class="prop"><p class="tag">通年ライセンス</p><h3>中国・四国の鉄道が通年になれば、作品が生き残る</h3><p>7県の鉄道は期間限定にしか無い。ここが通年に変われば、<strong>コンテストで生まれたものがコンテストの後も動き続ける</strong>。審査基準の「社会課題解決への寄与」を実際に果たせるかどうかは、作品の出来より先に、この一点で決まっている県がある。</p></div>
 <div class="prop"><p class="tag">ほこナビ</p><h3>31件のうち24件が東京・神奈川</h3><p>歩行空間のバリアフリー情報は、募集要項が「誰もが自律的に安心して移動できる包摂社会」を掲げて推奨しているデータである。だがその整備は首都圏の駅周辺に集中していて、<strong>地方でバリアフリー経路案内を作ることはできない</strong>。高齢化率が高いのは地方の側なので、必要と供給が逆を向いている。</p></div>
@@ -250,7 +250,8 @@ footer{
 <li>都道府県の割り当ては行政界のポリゴンではなく、<strong>最も近いバス停の都道府県</strong>で代用している。27.8万点あるので人の住む所ではまず外さないが、離島などで揺れうる。</li>
 <li>県をまたぐ鉄道路線は、通る県それぞれで1本と数えている。県ごとの数を足しても全国の路線数（597）にはならない。</li>
 <li>「乗換案内が作れる」は<strong>静的データが両モードにある</strong>という意味で、実際の乗換に足る品質があるかまでは見ていない。</li>
-<li>PLATEAU の地域数は G空間情報センターのデータセット名から数えた。地図上の位置は配布範囲の中心なので、市域そのものではない。</li>
+<li>PLATEAU の地域数は G空間情報センターのデータセット名から数えた。同名の市区町村（森町・清水町・府中市）は名前では決まらないので、配布範囲の位置で判別している。公式サイトの表記は306地域で、1件の差は府中市を東京都と広島県に分けたぶん。</li>
+<li>地図上の PLATEAU の点は配布範囲の中心だが、島嶼や海岸沿いでは重心が海に落ちるため、<strong>その県の最も近いバス停に寄せている</strong>（24件）。市役所の位置ではない。</li>
 <li>Project LINKS と連携先のデータは、場所の軸で数えていない。全国一律か、地域の概念を持たないため。</li>
 <li>バスの母集団 P11 は2022年、オープンデータ側は2026年。4年のずれがある。</li>
 </ul>
