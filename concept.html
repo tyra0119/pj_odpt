@@ -254,7 +254,8 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
   </dl>
   <p>
     B と C を混ぜないこと。事業者に対して事実と異なる表示をすれば、企画の信頼性は一発で壊れる。
-    判定できないものには「未確認」を必ず持たせる。
+    そのため地図の「なし」は、<strong>確認できた範囲では見つからなかった</strong>という意味に留めている。
+    断定はしない。
   </p>
 </section>
 
@@ -373,7 +374,7 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
         <dd>確認できた範囲では、どこにも機械可読なデータが無い</dd></div>
     </dl>
     <p>
-      そして地図の上部にトグルを1つ置く——コンテスト終了日、2027年3月13日。
+      期間限定のデータが切れる日——2027年3月13日——を境に、地図はこう変わる。
     </p>
     <div class="panel">
       <div class="readout">
@@ -397,8 +398,9 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
       機械可読なデータが日本のどこにも無くなる。
     </p>
     <p>
-      これは批判ではない。<strong style="color:var(--night-ink)">通年ライセンスへの移行が進めば、この地図は消えなくなる</strong>——
-      そういうメッセージとして設計する。
+      これは批判ではなく、期日と件数の話である。
+      <strong style="color:var(--night-ink)">106路線という数が、この地図に載る事実のひとつ</strong>であり、
+      どう受け取るかは見る人に委ねる。
     </p>
   </section>
 </div>
@@ -407,16 +409,21 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
   <span class="sec-no">04 — 設計</span>
   <h2>分母をどう作るか</h2>
   <p>モードごとに母集団の出所と粒度を決める。ここが全体の労力の中心になる。</p>
+  <p style="font-size:.88rem;color:var(--ink-2)">
+    実際に組めたのは鉄道・バス・航空の3つだけだった。残る3モードは全国の母集団が
+    機械可読な形で存在しないため、<strong>割合を出していない</strong>。
+    地図では公開されている件数のみを出し、母集団が無いことを明示している。
+  </p>
   <div class="tablewrap">
     <table>
       <thead><tr><th>モード</th><th>分母の出所</th><th>粒度</th></tr></thead>
       <tbody>
         <tr><td>鉄道</td><td>国土数値情報 N02（全国の路線・駅、事業者名付き）</td><td>路線・駅</td></tr>
         <tr><td>バス</td><td>国土数値情報 P11 ＋ 全1,741市区町村</td><td>市区町村・事業者</td></tr>
-        <tr><td>フェリー</td><td>国交省 定期旅客航路事業者一覧</td><td>航路</td></tr>
-        <tr><td>デマンド交通</td><td>自家用有償旅客運送 登録一覧</td><td>市区町村</td></tr>
-        <tr><td>航空</td><td>全国97空港・定期便就航路線</td><td>空港</td></tr>
-        <tr><td>シェアサイクル</td><td>国交省 シェアサイクル導入状況調査 ＋ GBFS</td><td>市区町村・ポート</td></tr>
+        <tr><td>航空</td><td>国土数値情報 C28（全国108空港）</td><td>空港</td></tr>
+        <tr><td>フェリー</td><td class="zero">全国の母集団を機械可読な形で作れていない</td><td>航路</td></tr>
+        <tr><td>デマンド交通</td><td class="zero">同上</td><td>市区町村</td></tr>
+        <tr><td>シェアサイクル</td><td class="zero">同上</td><td>ポート</td></tr>
       </tbody>
     </table>
   </div>
@@ -500,12 +507,17 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
     <li><span class="when">2026-09</span><span>分母データの収集と名寄せ辞書。最優先。<span style="color:var(--ink-3)">（実現性検証は完了）</span></span></li>
     <li><span class="when">2026-10</span><span>バス＋鉄道の2モードで地図 MVP を完成させる</span></li>
     <li><span class="when">2026-11</span><span>残り4モード、時間軸スライダー、人口カバー率</span></li>
-    <li><span class="when">2026-12</span><span>UI 磨き込み、ODPT CKAN への登録申請<span style="color:var(--ink-3)">（アクション導線とカバレッジデータ公開は前倒しで完了）</span></span></li>
+    <li><span class="when">2026-12</span><span>UI 磨き込み、判定精度の見直し<span style="color:var(--ink-3)">（カバレッジデータの公開は前倒しで完了）</span></span></li>
     <li class="due"><span class="when">2027-01-11</span><span>応募締切（23:59 JST）</span></li>
   </ol>
   <p>
-    技術構成は静的で組める。Python + GeoPandas でバッチ集計し、PMTiles / GeoJSON を生成、
-    MapLibre GL JS + deck.gl で描画、GitHub Actions で日次更新。サーバ費用はゼロで済む。
+    技術構成は静的で組める。Python でバッチ集計し、座標を整数デルタ符号化した自前の JSON を生成、
+    WebGL で直に描く。配信は GitHub Pages。サーバ費用はゼロで済む。
+  </p>
+  <p style="font-size:.88rem;color:var(--ink-2)">
+    MapLibre GL JS も試したが、タイル・グリフ・外部 CSS が配布先の CSP を通らず、
+    <span class="mono">fitBounds</span> も効かなかったため外した。
+    約30万点を扱うので、頂点バッファを一度 GPU へ送り、以降はユニフォームだけを更新している。
   </p>
 </section>
 
@@ -520,7 +532,7 @@ footer{padding:2.6rem 0 4rem; font-size:.76rem; color:var(--ink-3); line-height:
   <p>
     もうひとつ。「gtfs-data.jp にフィードが0件の府県が7つある」といった観測は、
     事業者が自社サイトで公開しているだけの可能性が高い。断定表示は誤った批判になるため、
-    A / B / C の分類と「未確認」ステータスを厳格に守る。
+    A / B / C の分類を厳格に守り、「なし」は確認できた範囲の話だと明示する。
   </p>
 </section>
 </main>
