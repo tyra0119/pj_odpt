@@ -140,24 +140,73 @@ footer{
   position:absolute; left:1rem; top:1rem; z-index:2; font-size:.7rem; color:var(--ink-3);
   max-width:23rem; line-height:1.55;
 }
+/* ── 入口 ──────────────────────────────────────────────
+   開いた瞬間に「何の地図か」が分からないのが最大の弱点だった。
+   3行で言い切り、押したら消える。次からは出さない。 */
+#intro{
+  position:absolute; z-index:6; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(30rem, calc(100% - 2rem));
+  background:rgba(14,23,32,.94); border:1px solid var(--rule); border-radius:4px;
+  padding:1.4rem 1.5rem 1.2rem; box-shadow:0 18px 50px rgba(0,0,0,.55);
+}
+#intro.gone{display:none}
+#intro .lead{margin:0 0 .9rem; font-size:1.02rem; line-height:1.7; color:var(--ink)}
+#intro .lead b{color:var(--lit); font-weight:700}
+#intro .ikeys{list-style:none; margin:0 0 1rem; padding:0; display:grid; gap:.35rem}
+#intro .ikeys li{
+  display:flex; align-items:baseline; gap:.5rem; font-size:.78rem; color:var(--ink-3);
+}
+#intro .ikeys i{
+  width:9px; height:9px; border-radius:2px; display:block; flex:none;
+  position:relative; top:1px;
+}
+#intro .ikeys b{color:var(--ink); font-weight:500; min-width:9.5rem}
+#intro .how{margin:0 0 1.1rem; font-size:.78rem; color:var(--ink-3); line-height:1.7}
+#intro .how b{color:var(--ink-2); font-weight:600}
+#intro button{
+  font:inherit; font-size:.82rem; padding:.5rem 1.2rem; cursor:pointer;
+  background:transparent; color:var(--lit); border:1px solid var(--lit); border-radius:2px;
+}
+#intro button:hover{background:rgba(75,219,247,.12)}
+#intro button:focus-visible{outline:2px solid var(--lit); outline-offset:2px}
+@media (max-width:900px){
+  #intro{padding:1.1rem 1.1rem 1rem}
+  #intro .ikeys b{min-width:8rem}
+}
 footer b{color:var(--ink-2); font-weight:500}
 #fallback{
   position:absolute; inset:0; display:none; place-items:center; text-align:center;
   padding:2rem; color:var(--ink-2); font-size:.85rem;
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+/* ── 狭い画面 ──────────────────────────────────────────
+   地図を上、凡例を下に積む。**情報パネルは消さない。**
+   ホバーが使えないぶん、タップで出す（map.js 側で拾う）。 */
 @media (max-width:900px){
-  .stage{display:block}
-  #side{width:auto; border-right:0; border-bottom:1px solid var(--rule)}
-  header{gap:.8rem; padding:.85rem 1rem .65rem}
-  #info{display:none}
+  .stage{display:block; height:auto; overflow-y:auto; -webkit-overflow-scrolling:touch}
+  .mapwrap{height:min(62vh, 30rem); position:sticky; top:0; z-index:3}
+  #side{
+    width:auto; border-right:0; border-top:1px solid var(--rule);
+    overflow:visible; padding:.9rem 1rem 2rem;
   }
+  header{gap:.8rem; padding:.85rem 1rem .65rem}
+  header .brand h1{font-size:1rem}
+  .zoom{top:auto; bottom:.6rem}
+  #info{
+    left:.6rem; right:.6rem; transform:none; bottom:.6rem;
+    width:auto; max-height:45%; overflow-y:auto; font-size:.82rem;
+  }
+  #info dl{grid-template-columns:auto 1fr}
+  footer{position:static; max-width:none; padding:.6rem 1rem 0; order:2}
+  .skey,.tkey{font-size:.78rem; padding:.3rem .6rem}   /* 指で押せる大きさに */
+  .row{padding:.6rem .1rem}
+}
 </style>
 
 <header>
   <div class="brand">
     <h1>交通データ夜景図</h1>
-    <p>公共交通オープンデータの整備状況 ／ 実測 2026-09-09</p>
+    <p><b>データがある所だけが光る。</b>暗いところは、公開されていないところ ／ 実測 2026-09-09</p>
   </div>
 </header>
 
@@ -182,8 +231,22 @@ footer b{color:var(--ink-2); font-weight:500}
     <p>この端末では WebGL が使えないため、地図を表示できません。</p>
   </div>
 
+  <!-- 開いた直後に出す。何の地図かを3行で言い切る -->
+  <div id="intro">
+    <p class="lead">日本の公共交通オープンデータが、<b>どこに無いか</b>を描いた地図です。</p>
+    <ul class="ikeys">
+      <li><i style="background:var(--lit)"></i><b>ODPT</b>通年で使える</li>
+      <li><i style="background:var(--temp)"></i><b>ODPT（期間限定）</b>2027-03-13 で終わる</li>
+      <li><i style="background:var(--alt)"></i><b>ODPT外</b>gtfs-data.jp 等にある</li>
+      <li><i style="background:var(--void)"></i><b>なし</b>確認できた範囲では無い</li>
+    </ul>
+    <p class="how">路線や停留所を<b>タップ</b>（PCはカーソルを合わせる）すると、
+      事業者名とデータの所在が出ます。左の一覧で交通機関ごとに絞り込めます。</p>
+    <button type="button" id="introgo">地図を見る</button>
+  </div>
+
   <footer>
-    薄い輪郭は海岸線。<b>その上はすべて交通機関で、明るいほどデータが揃っています。</b><br>
+    薄い輪郭は海岸線と県境。<b>その上はすべて交通機関です。</b><br>
     <span id="legend-foot"></span>沖縄は縮小すると視野に入ります。
   </footer>
 
@@ -485,8 +548,9 @@ footer b{color:var(--ink-2); font-weight:500}
       }
     });
   });
-  function pickPoint(px, py) {
-    var tol = 8 / view.k;
+  var TOUCH_TOL = 20;      // 指は太い。当たり判定を広げる
+  function pickPoint(px, py, tolPx) {
+    var tol = (tolPx || 8) / view.k;
     var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
     var cy = Math.floor(wx / PCELL), cx = Math.floor(wy / PCELL);
     var best = null, bd = tol * tol;
@@ -719,8 +783,8 @@ footer b{color:var(--ink-2); font-weight:500}
     var ex = px - (ax + t * dx), ey = py - (ay + t * dy);
     return ex * ex + ey * ey;
   }
-  function pick(px, py) {
-    var tol = 7 / view.k, best = null, bd = tol * tol;
+  function pick(px, py, tolPx) {
+    var tol = (tolPx || 7) / view.k, best = null, bd = tol * tol;
     var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
     for (var n = 0; n < RAIL.length; n++) {
       var f = RAIL[n], b = f.bb;
@@ -750,7 +814,7 @@ footer b{color:var(--ink-2); font-weight:500}
 
   // ── 情報パネル ──────────────────────────────────────────
   var info = document.getElementById('info');
-  var HINT = '<p class="hint">路線や停留所にカーソルを合わせると、'
+  var HINT = '<p class="hint">路線や停留所にカーソルを合わせる（スマホはタップ）と、'
            + '事業者名とデータの所在が出ます。</p>';
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -952,7 +1016,11 @@ footer b{color:var(--ink-2); font-weight:500}
 
   // ── 操作 ────────────────────────────────────────────────
   var drag = null;
+  // タップ判定。**指ではホバーが使えない。**
+  // 押して離すまでの移動が小さければ、そこを選んだものとして扱う。
+  var tap = null;
   cv.addEventListener('pointerdown', function (e) {
+    tap = { x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
     drag = { x: e.clientX, y: e.clientY };
     cv.classList.add('drag');
     cv.setPointerCapture(e.pointerId);
@@ -980,7 +1048,23 @@ footer b{color:var(--ink-2); font-weight:500}
     if (key !== hoverPtKey) { hoverPtKey = key; hoverPt = pt; showPointInfo(pt); }
   });
   function endDrag() { if (drag) { cv.classList.remove('drag'); drag = null; } }
-  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointerup', function (e) {
+    endDrag();
+    if (!tap) return;
+    var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
+    var touch = tap.touch;
+    tap = null;
+    if (!touch || moved > 10) return;      // 動いていたら地図を動かしただけ
+    var r = cv.getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    var f = on.rail ? pick(px, py, TOUCH_TOL) : null;
+    if (f) { setHover(f); showInfo(f); render(); return; }
+    if (hover) { setHover(null); render(); }
+    var pt = pickPoint(px, py, TOUCH_TOL);
+    hoverPt = pt;
+    hoverPtKey = pt ? pt.mode + pt.status + pt.name : null;
+    showPointInfo(pt);
+  });
   cv.addEventListener('pointercancel', endDrag);
   cv.addEventListener('pointerleave', function () {
     if (drag) return;
@@ -1004,6 +1088,22 @@ footer b{color:var(--ink-2); font-weight:500}
     view.k = k2;
     render();
   }
+
+  // ── 入口 ──────────────────────────────────────────────
+  // 一度閉じたら次からは出さない。localStorage は使えないことがあるので、
+  // 読み書きの両方を try で包み、失敗しても「毎回出す」に倒れるだけにする。
+  var intro = document.getElementById('intro');
+  var SEEN = 'whitemap.intro.v1';
+  function closeIntro() {
+    if (!intro || intro.classList.contains('gone')) return;
+    intro.classList.add('gone');
+    try { localStorage.setItem(SEEN, '1'); } catch (e) { /* 使えなくても構わない */ }
+  }
+  try {
+    if (localStorage.getItem(SEEN)) intro.classList.add('gone');
+  } catch (e) { /* 出したままでよい */ }
+  document.getElementById('introgo').addEventListener('click', closeIntro);
+  cv.addEventListener('pointerdown', closeIntro);   // 地図を触ったら閉じる
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
   document.getElementById('zout').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.6); };

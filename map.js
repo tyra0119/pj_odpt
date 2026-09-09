@@ -273,8 +273,9 @@
       }
     });
   });
-  function pickPoint(px, py) {
-    var tol = 8 / view.k;
+  var TOUCH_TOL = 20;      // 指は太い。当たり判定を広げる
+  function pickPoint(px, py, tolPx) {
+    var tol = (tolPx || 8) / view.k;
     var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
     var cy = Math.floor(wx / PCELL), cx = Math.floor(wy / PCELL);
     var best = null, bd = tol * tol;
@@ -507,8 +508,8 @@
     var ex = px - (ax + t * dx), ey = py - (ay + t * dy);
     return ex * ex + ey * ey;
   }
-  function pick(px, py) {
-    var tol = 7 / view.k, best = null, bd = tol * tol;
+  function pick(px, py, tolPx) {
+    var tol = (tolPx || 7) / view.k, best = null, bd = tol * tol;
     var wx = (px - W / 2) / view.k + view.x, wy = (py - H / 2) / view.k + view.y;
     for (var n = 0; n < RAIL.length; n++) {
       var f = RAIL[n], b = f.bb;
@@ -538,7 +539,7 @@
 
   // ── 情報パネル ──────────────────────────────────────────
   var info = document.getElementById('info');
-  var HINT = '<p class="hint">路線や停留所にカーソルを合わせると、'
+  var HINT = '<p class="hint">路線や停留所にカーソルを合わせる（スマホはタップ）と、'
            + '事業者名とデータの所在が出ます。</p>';
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -740,7 +741,11 @@
 
   // ── 操作 ────────────────────────────────────────────────
   var drag = null;
+  // タップ判定。**指ではホバーが使えない。**
+  // 押して離すまでの移動が小さければ、そこを選んだものとして扱う。
+  var tap = null;
   cv.addEventListener('pointerdown', function (e) {
+    tap = { x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
     drag = { x: e.clientX, y: e.clientY };
     cv.classList.add('drag');
     cv.setPointerCapture(e.pointerId);
@@ -768,7 +773,23 @@
     if (key !== hoverPtKey) { hoverPtKey = key; hoverPt = pt; showPointInfo(pt); }
   });
   function endDrag() { if (drag) { cv.classList.remove('drag'); drag = null; } }
-  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointerup', function (e) {
+    endDrag();
+    if (!tap) return;
+    var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
+    var touch = tap.touch;
+    tap = null;
+    if (!touch || moved > 10) return;      // 動いていたら地図を動かしただけ
+    var r = cv.getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    var f = on.rail ? pick(px, py, TOUCH_TOL) : null;
+    if (f) { setHover(f); showInfo(f); render(); return; }
+    if (hover) { setHover(null); render(); }
+    var pt = pickPoint(px, py, TOUCH_TOL);
+    hoverPt = pt;
+    hoverPtKey = pt ? pt.mode + pt.status + pt.name : null;
+    showPointInfo(pt);
+  });
   cv.addEventListener('pointercancel', endDrag);
   cv.addEventListener('pointerleave', function () {
     if (drag) return;
@@ -792,6 +813,22 @@
     view.k = k2;
     render();
   }
+
+  // ── 入口 ──────────────────────────────────────────────
+  // 一度閉じたら次からは出さない。localStorage は使えないことがあるので、
+  // 読み書きの両方を try で包み、失敗しても「毎回出す」に倒れるだけにする。
+  var intro = document.getElementById('intro');
+  var SEEN = 'whitemap.intro.v1';
+  function closeIntro() {
+    if (!intro || intro.classList.contains('gone')) return;
+    intro.classList.add('gone');
+    try { localStorage.setItem(SEEN, '1'); } catch (e) { /* 使えなくても構わない */ }
+  }
+  try {
+    if (localStorage.getItem(SEEN)) intro.classList.add('gone');
+  } catch (e) { /* 出したままでよい */ }
+  document.getElementById('introgo').addEventListener('click', closeIntro);
+  cv.addEventListener('pointerdown', closeIntro);   // 地図を触ったら閉じる
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
   document.getElementById('zout').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.6); };

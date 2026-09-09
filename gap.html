@@ -152,7 +152,8 @@ footer{
 <header class="wrap">
 <p class="eyebrow">交通データ白地図</p>
 <h1>募集要項と、実データの距離</h1>
-<p class="lede">チャレンジ2026 は<em>「地方での課題解決」</em>を狙いに掲げ、5つの提供元からオープンデータを公開している。では実際に、どこで何が作れるのか。全国の母集団に対して測った。</p>
+<p class="lede">チャレンジ2026 は5つの提供元からオープンデータを公開している。いま、どこで何が作れるのか。全国の母集団に対して測った。<em>データが増えれば、作れるものはもっと増える</em>——それがどれくらいかを、数字にしておくための資料である。</p>
+<p class="lede" style="font-size:.92rem">これは課題を解決するアプリではない。<strong>データの状態を点検するための地図</strong>である。アイデア次第でアプリはいくらでも作れる。ここで見たいのは、その土台がいまどこまで揃っているか、という一点にすぎない。</p>
 <p class="meta">実測 <span class="mono">2026-09-09</span>　／　募集要項は <a href="https://challenge2026.odpt.org/ja/outline.html">開催概要</a> と <a href="https://challenge2026.odpt.org/ja/opendata.html">公開するオープンデータ</a> より引用</p>
 </header>
 <main>
@@ -193,18 +194,18 @@ footer{
 </section>
 <section class="wrap">
 <span class="sec-no">04 — 地方</span>
-<h2>「地方での課題解決」は、どこまで可能か</h2>
+<h2>いま、どこまで揃っているか</h2>
 <p>公共交通のいちばん基本的な組み合わせで測る。<strong>鉄道とバスの両方にオープンデータがあるか</strong>——つまり、その県で乗換案内が成立するか。</p>
 <div class="bars">
 <div class="bar b-odpt"><div class="lab">ODPT のデータだけで作れる</div><div class="track"><span style="width:61.8%"></span></div><div class="val"><b>19県</b><em>7,751万人・61.8%</em></div></div>
 <div class="bar b-repo"><div class="lab">リポジトリを足して作れる</div><div class="track"><span style="width:8.7%"></span></div><div class="val"><b>8県</b><em>1,095万人・8.7%</em></div></div>
-<div class="bar b-none"><div class="lab">どうやっても作れない</div><div class="track"><span style="width:29.4%"></span></div><div class="val"><b>20県</b><em>3,686万人・29.4%</em></div></div>
+<div class="bar b-none"><div class="lab">鉄道とバスが揃わない</div><div class="track"><span style="width:29.4%"></span></div><div class="val"><b>20県</b><em>3,686万人・29.4%</em></div></div>
 </div>
 <p class="fine">帯の人口は<strong>その県に住む人の数</strong>であって、その全員にデータが届くという意味ではない。実際に届いている割合は前節のとおり、鉄道 19.6%、バス 25.1%。</p>
 <p>ODPT だけなら <strong>19県</strong>。そこに GTFSデータリポジトリを足すと <strong>27県</strong>になる。増える8県は岩手県、福島県、富山県、岐阜県、三重県、徳島県、高知県、熊本県。<strong>必須要件がリポジトリを含めていることは、確かに効いている。</strong></p>
-<div class="note"><p><strong>20県・3,686万人（全国の29.4%）</strong>では、何をどう組み合わせても<strong>乗換案内は</strong>作れない。ただしこれは乗換案内の話であって、そこで何も作れないという意味ではない。次の節に続く。</p></div>
-<h3>作れない理由は、全部おなじだった</h3>
-<p>バスのオープンデータは<strong>47都道府県すべてにある</strong>。鉄道は27県しかない。つまり、作れない20県は<strong>例外なく鉄道側が理由</strong>である。逆——鉄道はあるがバスが無い県——は0県だった。</p>
+<div class="note"><p><strong>20県・3,686万人（全国の29.4%）</strong>では、鉄道とバスが揃わない。<strong>ここで作れるものが無いという意味ではない。</strong>揃っていない組み合わせが1つある、というだけである。他の題材なら作れるし、鉄道側が1つ入れば揃う。次の節に続く。</p></div>
+<h3>足りない側は、全部おなじだった</h3>
+<p>バスのオープンデータは<strong>47都道府県すべてにある</strong>。鉄道は27県。つまり揃わない20県は<strong>例外なく鉄道側が足りない</strong>。逆——鉄道はあるがバスが無い県——は0県だった。<em>裏を返せば、伸びしろがどこにあるかがはっきりしている。</em></p>
 <div class="tw"><table><thead><tr><th>県</th><th class="n">人口</th><th class="n">データの無い鉄道路線</th><th class="n">その駅数</th><th class="n">使えるバス停</th><th class="n">PLATEAU</th><th class="n">ほこナビ</th></tr></thead><tbody>
 <tr><td>兵庫県</td><td class="n">544万人</td><td class="n">40</td><td class="n">667</td><td class="n">3,130</td><td class="n">5</td><td class="n">1</td></tr>
 <tr><td>北海道</td><td class="n">522万人</td><td class="n">26</td><td class="n">462</td><td class="n">1,009</td><td class="n">3</td><td class="n">—</td></tr>
@@ -270,13 +271,14 @@ footer{
 <section class="wrap stance">
 <span class="sec-no">08 — 立ち位置</span>
 <h2>データが増えれば、作れるものは増える</h2>
+<p>最初に断っておくと、<strong>この資料は「データが足りないから作れない」と言いたいわけではない</strong>。アイデア次第でアプリはいくらでも作れる。言いたいのは、<em>データが充実すればもっとよくなる</em>という一点である。</p>
 <p>コンテスト期間だけ公開されるデータが多いことは、実用的なものを作りにくくしている。7県では、作った瞬間にその作品の寿命が決まる。</p>
 <p>だが裏を返せば、<strong>データさえ揃っていれば実用的なものはいくらでも作れる</strong>。律速になっているのは技術ではなく、データの側である。乗換案内が作れない20県で足りないのは、アイデアでも実装力でもなく、<strong>鉄道の時刻表が機械可読な形で置かれていない</strong>という一点だった。</p>
 <p>そして、データが増えると作れるものが増えるだけではない。<em>気づきが増え、そこから出てくるアイデアも増える。</em></p>
 <div class="note" style="border-left-color:var(--accent)"><p><strong>この資料自体がその実例になっている。</strong>ほこナビと PLATEAU を数えるまで、ここには「20県では何も作れない」と書いてあった。2つ数えただけで、結論は「地方で作れるものが違う」に変わった。事業者の名寄せでは、西武バスと軽井沢町が停留所を共用している192組が見つかった。どれも、データを足したから見えたものである。</p></div>
 <p>だから、データは増えてほしいと思う。</p>
 <p><strong>ただし、これは軽々しく言えることではない。</strong>データを公開するには、時刻表を機械可読な形に整え、改正のたびに更新し、品質を保ち続ける作業が要る。その負担は公開する側にかかる。外から「出してほしい」と言うのは簡単だが、実際に手を動かすのは事業者と自治体であって、こちらではない。</p>
-<p>この地図がやるのは、<strong>どこに何が無いかを測って、置いておくところまで</strong>である。判断は、データを持っている側のものだ。</p>
+<p>この地図がやるのは、<strong>どこに何が無いかを測って、置いておくところまで</strong>である。解決するアプリではなく、<strong>データの状態を点検するための道具</strong>だと思っている。判断は、データを持っている側のものだ。</p>
 </section>
 <section class="wrap">
 <span class="sec-no">09 — 読み方</span>
