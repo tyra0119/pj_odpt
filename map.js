@@ -103,8 +103,12 @@
 
   // ── WebGL ──────────────────────────────────────────────
   var cv = document.getElementById('map');
-  var gl = cv.getContext('webgl', { antialias: true, alpha: false, premultipliedAlpha: false })
-        || cv.getContext('experimental-webgl');
+  // preserveDrawingBuffer を立てておく。無いと合成後にバッファが消え、
+  // 画像として保存できない（右クリックで保存も、資料用の書き出しもできない）。
+  // 静止画を描き直す使い方なので、速度の代償はほぼ無い。
+  var GLOPT = { antialias: true, alpha: false, premultipliedAlpha: false,
+                preserveDrawingBuffer: true };
+  var gl = cv.getContext('webgl', GLOPT) || cv.getContext('experimental-webgl', GLOPT);
   if (!gl) {
     cv.style.display = 'none';
     document.getElementById('fallback').style.display = 'grid';
@@ -243,9 +247,9 @@
   //   gap  … バス停や駅はあるが、データが無い ← 公開されれば案内できる
   //   none … バス停も駅も無い。データの問題ではない
   var TOUR_IDS = ['gap', 'none', 'data'];      // 描く順。主役の gap を最後に
-  var TOUR_HEX = { gap: '#FF7A6B', none: '#8A5A62', data: '#55707E' };
+  var TOUR_HEX = { gap: '#FF7A6B', none: '#C2707C', data: '#55707E' };
   var TOUR_RGB = {
-    gap: [1.0, 0.478, 0.420], none: [0.541, 0.353, 0.384], data: [0.333, 0.439, 0.494]
+    gap: [1.0, 0.478, 0.420], none: [0.761, 0.439, 0.486], data: [0.333, 0.439, 0.494]
   };
   var TOUR_SEG = {};
   TOUR_IDS.forEach(function (id) {
@@ -452,11 +456,13 @@
       }
       var pb = PT_BUF['tour_' + id] && PT_BUF['tour_' + id][EXTRA_ST];
       if (!pb) return;
-      var base = id === 'gap' ? 3.4 : 2.4;
+      // 「停留所なし」は162件しかない。同じ大きさだと単独で見たとき消える
+      var base = id === 'gap' ? 3.4 : (id === 'none' ? 3.0 : 2.4);
       var psz = Math.max(base, Math.min(base * 5, base * Math.pow(z, 0.55)));
-      if (id === 'gap') {
+      if (id !== 'data') {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        drawBuf(pb, gl.POINTS, TOUR_RGB[id], 0.16, psz * 2.4, null, true);
+        drawBuf(pb, gl.POINTS, TOUR_RGB[id], id === 'gap' ? 0.16 : 0.13,
+                psz * 2.4, null, true);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       }
       drawBuf(pb, gl.POINTS, TOUR_RGB[id], id === 'data' ? 0.5 : 0.9, psz,
