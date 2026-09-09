@@ -475,106 +475,22 @@
       '<dl><dt>データの所在</dt><dd>' + esc(LABEL[p.s]) + '</dd>' +
       '<dt>運営会社</dt><dd>' + esc(p.op) + '</dd>' +
       '<dt>種別</dt><dd>' + esc(p.k) + '</dd>' +
-      '<dt>駅数</dt><dd class="mono">' + p.n + '</dd>' + extra + '</dl>' +
-      (p.s === 'データなし' ? actionHTML(p.op, p.line) : '');
-    bindAction();
+      '<dt>駅数</dt><dd class="mono">' + p.n + '</dd>' + extra + '</dl>';
   }
 
   var MODE_LABEL = {};
 
-  // ── 「なし」で終わらせないための導線 ──────────────────────
-  // この地図は申請を代行しない。事業者が自分で公開しようとしたときに、
-  // 調べる手間だけを肩代わりする。だから出すのは依頼ではなく **情報** で、
-  // 手順・費用・窓口をまとめた publish.html への入口として置く。
-  // アーティファクトとしても配るので、リンクは公開URLの絶対パスにする。
-  var SITE = 'https://tyra0119.github.io/pj_odpt/';
-
-  function requestText(who, what) {
-    return [
-      (who || '（事業者名）') + ' ご担当者さま',
-      '',
-      (what || '運行情報') + 'をオープンデータとして公開する方法について、',
-      '公開されている資料と窓口をまとめたものがあります。',
-      'ご検討の材料になれば幸いです。',
-      '',
-      '■ 仕様と手引き（国土交通省）',
-      '  公共交通運行情報標準データ（GTFS-JP）に関する資料・検討会',
-      '  https://www.mlit.go.jp/sogoseisaku/transport/sosei_transport_tk_000067.html',
-      '  入門は「はじめよう！標準的なバス情報フォーマット」から',
-      '',
-      '■ 公開先（いずれも公開側の費用はかかりません）',
-      '  GTFSデータリポジトリ … 無償で登録・公開。固定URL・品質検証つき',
-      '  https://gtfs-data.jp/',
-      '  公共交通オープンデータ協議会 … 無償でデータ提供する場合、',
-      '  一般会員の年会費は1口分を支払ったものとみなされます',
-      '  https://www.odpt.org/admission/',
-      '',
-      '■ 相談窓口',
-      '  公共交通オープンデータ協議会 事務局',
-      '  TEL 03-6426-9192 / odpt-office@ubin.jp',
-      '',
-      '■ 手順・費用・窓口のまとめ',
-      '  ' + SITE + 'publish.html',
-      '',
-      '※ この案内は「交通データ白地図」が自動で組み立てたものです。',
-      '　 すでに公開されている場合は行き違いですのでご容赦ください。'
-    ].join('\n');
-  }
-
-  var actSeq = 0;
-  function actionHTML(who, what) {
-    var id = 'act' + (++actSeq);
-    ACT_PENDING = { id: id, text: requestText(who, what) };
-    return '<span class="act"><p>この' +
-      (what || '路線') + 'のデータは、確認できた範囲では見つかりません。' +
-      '公開するときの手順・費用・窓口は' +
-      '<a href="' + SITE + 'publish.html" target="_blank" rel="noopener">' +
-      'こちらにまとめてあります</a>。</p>' +
-      '<button type="button" id="' + id + '">案内をコピー</button></span>';
-  }
-  var ACT_PENDING = null;
-  function bindAction() {
-    if (!ACT_PENDING) return;
-    var a = ACT_PENDING, el = document.getElementById(a.id);
-    ACT_PENDING = null;
-    if (!el) return;
-    el.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var done = function () {
-        el.textContent = 'コピーしました';
-        el.classList.add('done');
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(a.text).then(done, function () { fallback(a.text, done); });
-      } else {
-        fallback(a.text, done);
-      }
-    });
-  }
-  function fallback(text, done) {
-    // クリップボードAPIが使えない場合。選択できる形で出して手で写してもらう
-    var t = document.createElement('textarea');
-    t.value = text;
-    t.style.cssText = 'position:fixed;left:-9999px';
-    document.body.appendChild(t);
-    t.select();
-    try { document.execCommand('copy'); done(); } catch (err) { /* 何もしない */ }
-    document.body.removeChild(t);
-  }
   function showPointInfo(pt) {
     if (!pt) { showInfo(null); return; }
     var parts = (pt.name || '').split('｜');
     var head = parts[0] || MODE_LABEL[pt.mode] || '';
     var sub = parts.slice(1).filter(Boolean).join(' / ');
-    var act = pt.status === 'データなし'
-      ? actionHTML(sub.split(' / ')[0] || head, MODE_LABEL[pt.mode]) : '';
     info.innerHTML =
       '<p class="ttl">' + esc(head || MODE_LABEL[pt.mode]) + '</p>' +
       '<span class="badge" style="color:' + HEX[pt.status] + '">' +
       esc(LABEL[pt.status]) + '</span>' +
       '<dl><dt>交通機関</dt><dd>' + esc(MODE_LABEL[pt.mode]) + '</dd>' +
-      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>' + act;
-    bindAction();
+      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>';
   }
 
   // ── 左パネル ────────────────────────────────────────────
