@@ -138,6 +138,9 @@ ul.fine-list li{margin-bottom:.5em}
 .prop h3{margin:.25rem 0 .5rem; font-size:1.08rem}
 .prop p:last-child{margin-bottom:0; font-size:.92rem; color:var(--ink-2)}
 
+/* 立ち位置。ここだけは測った話ではなく、書き手の見方である */
+section.stance{background:var(--surface-2); border-block:1px solid var(--rule)}
+section.stance h2{color:var(--accent)}
 footer{
   border-top:1px solid var(--rule); padding:1.8rem 0 4rem;
   font-size:.78rem; color:var(--ink-3); line-height:1.9
@@ -234,20 +237,49 @@ footer{
 <p>1,221万人、全国の9.7%。中国・四国がまるごと入る。ここを主題に選ぶと、<strong>作品は完成した瞬間から寿命が決まっている</strong>ことになる。</p>
 </section>
 <section class="wrap">
-<span class="sec-no">06 — 提案</span>
+<span class="sec-no">06 — 観光</span>
+<h2>バス停はある。データが無いだけ</h2>
+<p>国土数値情報の観光資源から、面と線で範囲を持つもの1,879件を取り出し、その輪郭から 2km 以内を見た。<strong>ここで「無い」を2つに割るのが要点である。</strong></p>
+<div class="bars">
+<div class="bar b-odpt"><div class="lab">時刻表あり — 近くの停留所・駅の時刻表がオープンデータになっている</div><div class="track"><span style="width:48.0%"></span></div><div class="val"><b>901</b><em>48.0%</em></div></div>
+<div class="bar b-none"><div class="lab">時刻表なし — 停留所・駅はあるのに、時刻表がどこにも公開されていない</div><div class="track"><span style="width:43.4%"></span></div><div class="val"><b>816</b><em>43.4%</em></div></div>
+<div class="bar b-repo"><div class="lab">停留所なし — 2km以内に停留所も駅もない</div><div class="track"><span style="width:8.6%"></span></div><div class="val"><b>162</b><em>8.6%</em></div></div>
+</div>
+<div class="note" style="border-left-color:var(--accent)"><p>データの無い978件のうち、<strong>816件（83%）は交通そのものは在る</strong>。停留所や駅が2km以内にあって、その時刻表が機械可読な形で公開されていないだけである。<strong>公開されれば、その日から案内が作れる。</strong></p></div>
+<p class="fine">「時刻表なし」は <strong>ODPT に無い</strong>という意味ではない。ODPT にも GTFSデータリポジトリにも、どこにも無いという意味である。ODPT 外にあるものは「時刻表あり」に数えている。</p>
+<p>たとえば新潟県南魚沼市の<strong>龍谷寺</strong>。<strong>70m 先に「龍谷寺前」というバス停がある。</strong>だが南越後観光バスの時刻表は ODPT にも <span class='mono'>gtfs-data.jp</span> にも無い。3km 以内の32停留所すべてが同じ状態である。交通空白なのではなく、<strong>データの空白</strong>である。</p>
+<h3>その816件を、広い順に</h3>
+<p class="prefs" style="gap:.35rem"><span style="border-bottom-color:var(--gap)">知床半島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">天塩川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">石垣島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">サロベツ原野<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">西表島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">慶良間諸島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">宮古島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">九十九島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span><span style="border-bottom-color:var(--gap)">裏磐梯湖沼群<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">福島県</small></span><span style="border-bottom-color:var(--gap)">屈斜路湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">支笏湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">洞爺湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">青森県</small></span><span style="border-bottom-color:var(--gap)">浦内川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">霧多布湿原<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">国立公園十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">宇久島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span></p>
+<p><strong>島と、国立公園と、湖。</strong>人が交通手段をいちばん知りたい場所である。地元の人は経路を知っているが、訪れる人は知らない。その差を埋めるのが経路案内の役目だとすれば、必要とされる場所ほどデータが無いことになる。<em>そして、そのほとんどはバスが走っていない場所ではない。</em></p>
+<div class="note"><p><strong>ただし「人気」は測っていない。</strong>使ったのは観光資源の位置であって、入込客数ではない。分かるのは<strong>主要な観光資源がそこにある</strong>ところまでである。「データあり」901件のうち192件は期間限定だけなので、2027年3月13日に空白側へ移る。</p></div>
+</section>
+<section class="wrap">
+<span class="sec-no">07 — 提案</span>
 <h2>こういうデータが、ここにあれば</h2>
 <p>ここまでは測った事実である。ここから先は、その事実から見えてくる<strong>「あと何があれば何ができるか」</strong>を並べる。誰かに求めるものではなく、可能性の地図として読んでほしい。</p>
 <div class="props">
 <div class="prop"><p class="tag">鉄道の静的データ</p><h3>兵庫県・北海道・福岡県・岡山県 に1事業者ぶん</h3><p>この20県のうち16県は、バス側に数百〜数千の停留所ぶんのデータが既にある。鉄道の時刻表と駅が機械可読な形で1つ入るだけで、<strong>乗換案内が成立する県が増える</strong>。上位4県だけで1,764万人。<em>追加コストあたりの効き目が、全国でいちばん大きい場所である。</em></p></div>
 <div class="prop"><p class="tag">重なりが一枚足りない場所</p><h3>兵庫県・香川県・福井県——歩行空間データはあるのに、鉄道が無い</h3><p>ほこナビの歩行空間ネットワークは、地方では数えるほどしかない。その少ない地方の例が兵庫県・香川県・福井県にある。ところが同じ県に鉄道のオープンデータが無いため、<strong>駅までの経路と、駅からの移動が、つながらない</strong>。段差を避けた経路案内という、ほこナビが想定するそのままの使い方が、鉄道データ一枚で完成する場所である。</p></div>
 <div class="prop"><p class="tag">組み合わせを変える</p><h3>乗換案内が作れない20県のうち、19県に PLATEAU がある</h3><p>合計63地域。鉄道データが無くても、<strong>バス＋3D都市モデル＋全国一律のデータ</strong>（気象、交通事故統計、メッシュ人口）で組める題材はある。浸水時のバス経路、事故多発地点と停留所の関係、人口減少と路線網の重ね合わせ——いずれも鉄道の時刻表を必要としない。<em>「地方だから作れない」ではなく、「地方で作れるものが違う」。</em></p></div>
+<div class="prop"><p class="tag">観光地の足</p><h3>816の観光エリアは、データが入るだけで案内できる</h3><p>石垣島・西表島・宮古島・慶良間諸島、知床、屈斜路湖、支笏湖、洞爺湖、十和田湖、九十九島——いずれも<strong>バス停は現にある</strong>。無いのは時刻表の機械可読なデータだけである。新しく路線を作る話ではないので、<em>全国でいちばん「あと一歩」が短い場所だと言える。</em>交通そのものが無いのは162件（8.6%）にとどまる。</p></div>
 <div class="prop"><p class="tag">デマンド交通</p><h3>ODPT への集約だけで、1県が9県になる</h3><p>デマンド交通は募集要項が名指ししているモードだが、ODPT に通年で置かれているのは1県だけ。同じデータが <span class='mono'>gtfs-data.jp</span> には 2,579件ある。<strong>新しく作らなくていい。すでにあるものが、片方にしか無い。</strong>集約されれば「交通空白×デマンド交通」という、募集要項が想定するそのままのテーマが成立する。</p></div>
 <div class="prop"><p class="tag">通年ライセンス</p><h3>中国・四国の鉄道が通年になれば、作品が生き残る</h3><p>7県の鉄道は期間限定にしか無い。ここが通年に変われば、<strong>コンテストで生まれたものがコンテストの後も動き続ける</strong>。審査基準の「社会課題解決への寄与」を実際に果たせるかどうかは、作品の出来より先に、この一点で決まっている県がある。</p></div>
 <div class="prop"><p class="tag">ほこナビ</p><h3>31件のうち24件が東京・神奈川</h3><p>歩行空間のバリアフリー情報は、募集要項が「誰もが自律的に安心して移動できる包摂社会」を掲げて推奨しているデータである。だがその整備は首都圏の駅周辺に集中していて、<strong>地方でバリアフリー経路案内を作ることはできない</strong>。高齢化率が高いのは地方の側なので、必要と供給が逆を向いている。</p></div>
 </div>
 </section>
+<section class="wrap stance">
+<span class="sec-no">08 — 立ち位置</span>
+<h2>データが増えれば、作れるものは増える</h2>
+<p>コンテスト期間だけ公開されるデータが多いことは、実用的なものを作りにくくしている。7県では、作った瞬間にその作品の寿命が決まる。</p>
+<p>だが裏を返せば、<strong>データさえ揃っていれば実用的なものはいくらでも作れる</strong>。律速になっているのは技術ではなく、データの側である。乗換案内が作れない20県で足りないのは、アイデアでも実装力でもなく、<strong>鉄道の時刻表が機械可読な形で置かれていない</strong>という一点だった。</p>
+<p>そして、データが増えると作れるものが増えるだけではない。<em>気づきが増え、そこから出てくるアイデアも増える。</em></p>
+<div class="note" style="border-left-color:var(--accent)"><p><strong>この資料自体がその実例になっている。</strong>ほこナビと PLATEAU を数えるまで、ここには「20県では何も作れない」と書いてあった。2つ数えただけで、結論は「地方で作れるものが違う」に変わった。事業者の名寄せでは、西武バスと軽井沢町が停留所を共用している192組が見つかった。どれも、データを足したから見えたものである。</p></div>
+<p>だから、データは増えてほしいと思う。</p>
+<p><strong>ただし、これは軽々しく言えることではない。</strong>データを公開するには、時刻表を機械可読な形に整え、改正のたびに更新し、品質を保ち続ける作業が要る。その負担は公開する側にかかる。外から「出してほしい」と言うのは簡単だが、実際に手を動かすのは事業者と自治体であって、こちらではない。</p>
+<p>この地図がやるのは、<strong>どこに何が無いかを測って、置いておくところまで</strong>である。判断は、データを持っている側のものだ。</p>
+</section>
 <section class="wrap">
-<span class="sec-no">07 — 読み方</span>
+<span class="sec-no">09 — 読み方</span>
 <h2>この数字の限界</h2>
 <ul class='fine-list'>
 <li><strong>「無い」は確認できた範囲の話。</strong>事業者が自社サイトだけで公開している可能性は残る。</li>
@@ -256,6 +288,7 @@ footer{
 <li>「乗換案内が作れる」は<strong>静的データが両モードにある</strong>という意味で、実際の乗換に足る品質があるかまでは見ていない。</li>
 <li>PLATEAU の地域数は G空間情報センターのデータセット名から数えた。同名の市区町村（森町・清水町・府中市）は名前では決まらないので、配布範囲の位置で判別している。公式サイトの表記は306地域で、1件の差は府中市を東京都と広島県に分けたぶん。</li>
 <li>地図上の PLATEAU の点は配布範囲の中心だが、島嶼や海岸沿いでは重心が海に落ちるため、<strong>その県の最も近いバス停に寄せている</strong>（24件）。市役所の位置ではない。</li>
+<li>観光資源は国土数値情報 P12-14。<strong>入込客数を持たない</strong>ので、人気の大小は言えない。面と線だけを使い、点（山岳・温泉など）は範囲を持たないため除いた。判定半径は輪郭から2kmで、これを広げると市街地のバス停を拾って意味が薄くなる。「データあり」には期間限定も含めている。「時刻表なし」と「停留所なし」の線引きは、国土数値情報 P11 の停留所と N02 の駅の位置で見ている。2km の外に停留所があっても「停留所なし」に入る。</li>
 <li>Project LINKS と連携先のデータは、場所の軸で数えていない。全国一律か、地域の概念を持たないため。</li>
 <li>バスの母集団 P11 は2022年、オープンデータ側は2026年。4年のずれがある。</li>
 </ul>
@@ -263,7 +296,7 @@ footer{
 </section>
 </main>
 <footer class="wrap">
-出典——<a href="https://challenge2026.odpt.org/ja/outline.html">公共交通オープンデータチャレンジ2026 開催概要</a>、<a href="https://challenge2026.odpt.org/ja/opendata.html">同 公開するオープンデータ</a>、国土数値情報 N02-24 / P11-22 / C28-21 / 500mメッシュ別将来推計人口（国土交通省）、公共交通オープンデータセンター、GTFSデータリポジトリ、歩行空間ナビ・プロジェクト、G空間情報センター（PLATEAU）。すべて <span class="mono">2026-09-09</span> 時点。<br>
+出典——<a href="https://challenge2026.odpt.org/ja/outline.html">公共交通オープンデータチャレンジ2026 開催概要</a>、<a href="https://challenge2026.odpt.org/ja/opendata.html">同 公開するオープンデータ</a>、国土数値情報 N02-24 / P11-22 / C28-21 / 500mメッシュ別将来推計人口（国土交通省）、公共交通オープンデータセンター、GTFSデータリポジトリ、歩行空間ナビ・プロジェクト、G空間情報センター（PLATEAU）、国土数値情報 P12-14（観光資源）。すべて <span class="mono">2026-09-09</span> 時点。<br>
 <a href="./">交通データ白地図</a> ／ <a href="map.html">交通データ夜景図</a> ／ <a href="concept.html">企画書</a> ／ <a href="data/">カバレッジデータ</a>
 </footer>
 </body>

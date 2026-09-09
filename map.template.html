@@ -13,6 +13,8 @@
   --void:#3A5670;     /* データなし */
   --hoko:#4FC98A;     /* ほこナビ（公共交通以外・別軸） */
   --plateau:#DB6EA8;  /* PLATEAU（同上） */
+  --tour-no:#FF7A6B;  /* 観光エリア・交通データなし */
+  --tour-ok:#55707E;  /* 観光エリア・交通データあり */
 }
 *{box-sizing:border-box}
 body{
@@ -55,6 +57,11 @@ header{
 
 /* 所在のキー（色の凡例。クリックで絞り込み） */
 #statuskeys{display:flex; flex-wrap:wrap; gap:.25rem}
+#tourkeys{display:flex; flex-wrap:wrap; gap:.25rem}
+.tkey b{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:.95em}
+dl.tdef{margin:.5rem 0 0; font-size:.68rem; line-height:1.5; color:var(--ink-3)}
+dl.tdef dt{font-weight:600; margin-top:.3rem}
+dl.tdef dd{margin:0}
 .skey{
   display:inline-flex; align-items:center; gap:.35rem; cursor:pointer;
   background:transparent; border:1px solid var(--rule); border-radius:2px;
@@ -117,6 +124,10 @@ header{
 #info .hint{color:var(--ink-3); font-size:.75rem; margin:0}
 #info dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:.15rem .7rem; font-size:.78rem}
 #info .ttl{display:inline}
+#info .tnote{
+  margin:.5rem 0 0; padding-top:.45rem; border-top:1px solid var(--rule);
+  font-size:.68rem; color:var(--ink-3); line-height:1.55;
+}
 #info .badge{margin-left:.6rem}
 #info dt{color:var(--ink-3); font-size:.72rem}
 #info dd{margin:0}
@@ -159,6 +170,9 @@ footer b{color:var(--ink-2); font-weight:500}
     <h2 class="mt">チャレンジで使える他のデータ</h2>
     <div id="extrakeys"></div>
     <p class="foot" id="extra-foot"></p>
+    <h2 class="mt">観光資源とデータ空白</h2>
+    <div id="tourkeys"></div>
+    <p class="foot" id="tour-foot"></p>
     <p class="foot" id="legend-foot"></p>
   </aside>
 
@@ -194,4 +208,5 @@ footer b{color:var(--ink-2); font-weight:500}
 <script id="summary" type="application/json">/*__SUMMARY__*/</script>
 <script id="pref" type="application/json">/*__PREF__*/</script>
 <script id="extra" type="application/json">/*__EXTRA__*/</script>
+<script id="tourism" type="application/json">/*__TOURISM__*/</script>
 <!--__ENGINE__-->

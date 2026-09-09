@@ -233,6 +233,34 @@
     PT_DATA[id][EXTRA_ST] = { xy: a, names: EXTRA[id].names || [] };
   });
 
+  // ── 観光資源のエリアと、データ空白の重なり ──────────────
+  // 国土数値情報 P12 の面・線を輪郭として描き、周囲2km に通年で使える
+  // 交通データがあるかで塗り分ける。**「観光地なのにデータが無い」**を言うため。
+  // P12 は入込客数を持たないので、人気の大小は言わない。
+  var TOUR = JSON.parse(document.getElementById('tourism').textContent);
+  // **「データが無い空白」と「交通が無い空白」は別。** 3つに分ける。
+  //   data … 近くにオープンデータがある（ODPT 通年・期間限定・ODPT外のいずれか）
+  //   gap  … バス停や駅はあるが、データが無い ← 公開されれば案内できる
+  //   none … バス停も駅も無い。データの問題ではない
+  var TOUR_IDS = ['gap', 'none', 'data'];      // 描く順。主役の gap を最後に
+  var TOUR_HEX = { gap: '#FF7A6B', none: '#8A5A62', data: '#55707E' };
+  var TOUR_RGB = {
+    gap: [1.0, 0.478, 0.420], none: [0.541, 0.353, 0.384], data: [0.333, 0.439, 0.494]
+  };
+  var TOUR_SEG = {};
+  TOUR_IDS.forEach(function (id) {
+    var seg = decode(TOUR[id].segs);
+    if (seg.length) TOUR_SEG[id] = buffer(seg);
+    var a = decode(TOUR[id].pts);
+    PT_BUF['tour_' + id] = {};
+    PT_DATA['tour_' + id] = {};
+    on['tour_' + id] = false;   // 表示と同じトグルで開け閉めする
+    if (!a.length) return;
+    // 輪郭だけだと全国表示では細すぎて見えない。代表点も一緒に描く
+    PT_BUF['tour_' + id][EXTRA_ST] = buffer(a);
+    PT_DATA['tour_' + id][EXTRA_ST] = { xy: a, names: TOUR[id].names || [] };
+  });
+
   // 画面上で最も近い点を拾う。格子はメルカトル座標で切る
   var PCELL = 0.0012;
   var PIDX = {};
@@ -407,6 +435,33 @@
       });
     });
 
+    // 観光エリア。3つの分類はそれぞれ独立に開け閉めできる
+    TOUR_IDS.forEach(function (id) {
+      if (!on['tour_' + id]) return;
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      var seg = TOUR_SEG[id];
+      if (seg) {
+        if (id === 'gap') {
+          for (var ti = 1; ti < HALO.length; ti++) {
+            drawBuf(seg, gl.LINES, TOUR_RGB[id], 0.30, 1, halo(ti, ws), false);
+          }
+        }
+        drawBuf(seg, gl.LINES, TOUR_RGB[id], id === 'data' ? 0.55 : 0.95, 1,
+                null, false);
+      }
+      var pb = PT_BUF['tour_' + id] && PT_BUF['tour_' + id][EXTRA_ST];
+      if (!pb) return;
+      var base = id === 'gap' ? 3.4 : 2.4;
+      var psz = Math.max(base, Math.min(base * 5, base * Math.pow(z, 0.55)));
+      if (id === 'gap') {
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        drawBuf(pb, gl.POINTS, TOUR_RGB[id], 0.16, psz * 2.4, null, true);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      }
+      drawBuf(pb, gl.POINTS, TOUR_RGB[id], id === 'data' ? 0.5 : 0.9, psz,
+              null, true);
+    });
+
     // 公共交通以外のデータ。交通機関より下に置くと埋もれるので、上に薄く重ねる
     EXTRA_IDS.forEach(function (id) {
       var b = PT_BUF[id] && PT_BUF[id][EXTRA_ST];
@@ -517,6 +572,32 @@
     var parts = (pt.name || '').split('｜');
     var head = parts[0] || MODE_LABEL[pt.mode] || '';
     var sub = parts.slice(1).filter(Boolean).join(' / ');
+    // 観光資源。データの所在ではなく、近くに交通データがあるかを出す
+    if (pt.mode.indexOf('tour_') === 0) {
+      var tk = pt.mode.slice(5);
+      var TL = TOUR[tk].label;
+      // parts[2] に最寄りのバス停が入っている。
+      // 「なし」でも停留所そのものはあることが多く、そこを見せないと
+      // 「バス停が無い」と誤読される
+      var stop = parts[2] || '';
+      info.innerHTML =
+        '<p class="ttl">' + esc(head) + '</p>' +
+        '<span class="badge" style="color:' + TOUR_HEX[tk] + '">' +
+        TL + '</span>' +
+        '<dl><dt>種別</dt><dd>' + esc(parts[1] || '観光資源') + '</dd>' +
+        '<dt>意味</dt><dd>' + TOUR[tk].long + '</dd>' +
+        (stop ? '<dt>' + (tk === 'gap' ? '最寄りの停留所' : '判定に使った停留所') +
+                '</dt><dd>' + esc(stop) + '</dd>' : '') +
+        '<dt>見た範囲</dt><dd>輪郭から2km。ODPT（通年・期間限定）と ODPT外</dd></dl>' +
+        (tk === 'gap'
+          ? '<p class="tnote">停留所や駅は現にあります。時刻表が機械可読な形で' +
+            '公開されていないだけで、公開されればその日から案内が作れます。' +
+            'ODPT に無いという意味ではなく、gtfs-data.jp 等にも無いという意味です。</p>'
+          : tk === 'none'
+          ? '<p class="tnote">2km以内に停留所も駅もありません。' +
+            'データではなく、交通そのものの空白です。</p>' : '');
+      return;
+    }
     // 公共交通以外のデータは所在の軸に載らない。何のデータかだけを出す
     if (EXTRA_HEX[pt.mode]) {
       info.innerHTML =
@@ -618,6 +699,39 @@
     + 'このうち場所によって有無があるのがこの2つ。'
     + '所在（ODPT／ODPT外）の軸には載らないため、別の色で示しています。'
     + '気象庁・警察庁・e-Stat などの連携データは全国一律なので載せていません。';
+
+  // 観光資源。**3つの分類をそれぞれ独立に開け閉めできる。**
+  // 「空白地帯」と「データが無いだけ」を切り分けて見たい、という要望による。
+  var tourEl = document.getElementById('tourkeys');
+  tourEl.innerHTML = ['gap', 'none', 'data'].map(function (id) {
+    return '<button class="skey tkey" data-t="' + id + '" aria-pressed="false" title="' +
+           TOUR[id].long + '"><i style="background:' + TOUR_HEX[id] + '"></i>' +
+           TOUR[id].label + ' <b>' + fmt(TOUR[id].count) + '</b></button>';
+  }).join('') +
+    '<dl class="tdef">' + ['gap', 'none', 'data'].map(function (id) {
+      return '<dt style="color:' + TOUR_HEX[id] + '">' + TOUR[id].label + '</dt>' +
+             '<dd>' + TOUR[id].long + '</dd>';
+    }).join('') + '</dl>';
+  Array.prototype.forEach.call(tourEl.querySelectorAll('.tkey'), function (k) {
+    k.addEventListener('click', function () {
+      var id = 'tour_' + k.dataset.t;
+      on[id] = !on[id];
+      k.setAttribute('aria-pressed', String(on[id]));
+      render();
+    });
+  });
+  document.getElementById('tour-foot').textContent =
+    '国土数値情報 P12 の観光資源のうち、範囲を持つ' + fmt(TOUR.meta.areas)
+    + '件（面と線）を輪郭で描いています。既定では消してあり、押すと重なります。'
+    + '判定は輪郭から2km。「データあり」は ODPT（通年・期間限定）と '
+    + 'GTFSデータリポジトリ等のいずれかにバス停か駅があるもので、'
+    + 'そのうち' + fmt(TOUR.meta.temp_only) + '件は期間限定だけなので '
+    + '2027年3月13日に失われます。'
+    + '「時刻表なし」は、停留所や駅は現にあって時刻表がどこにも'
+    + '公開されていないもの——ODPT に無いという意味ではなく、'
+    + 'gtfs-data.jp 等を含めてどこにも無いという意味です。'
+    + '公開されれば、その日から案内が作れます。'
+    + 'P12 は入込客数を持たないので、人気の大小までは分かりません。';
 
   document.getElementById('legend-foot').textContent =
     '数字は左から ODPT ／ ODPT（期間限定）／ ODPT外 ／ なし。帯はその割合。'
