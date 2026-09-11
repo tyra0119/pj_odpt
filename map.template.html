@@ -145,6 +145,19 @@ dl.tdef dd{margin:0}
   background:rgba(14,23,32,.93); color:var(--ink-2); border:1px solid var(--rule); border-radius:3px;
 }
 .zoom button:hover{color:var(--ink)}
+/* 日本地図の表示。既定では外してある */
+.basemap{
+  display:flex; align-items:center; gap:.4rem; cursor:pointer; user-select:none;
+  font-size:.72rem; color:var(--ink-2); padding:.3rem .55rem;
+  background:rgba(14,23,32,.93); border:1px solid var(--rule); border-radius:3px;
+}
+.basemap:hover{color:var(--ink)}
+.basemap input{margin:0; width:.85rem; height:.85rem; accent-color:var(--lit); cursor:pointer}
+.basemap:has(input:focus-visible){outline:1px solid var(--ink-2); outline-offset:1px}
+/* 出典は見える形で出す決まり。地図の文字と重なっても読めるよう下地を敷く */
+#attrib{margin:0; font-size:.62rem; color:var(--ink-3); text-align:right;
+        padding:.1rem .4rem; background:rgba(14,23,32,.88); border-radius:2px}
+#attrib a{color:var(--ink-2)}
 
 /* 情報 */
 #info{
@@ -332,6 +345,10 @@ footer b{color:var(--ink-2); font-weight:500}
       <button id="zreset" type="button" aria-label="全体表示" style="width:auto;padding:0 .5rem;font-size:.72rem">全体</button>
       <button id="zhelp" type="button" aria-label="この地図の見方">?</button>
     </div>
+    <label class="basemap"><input type="checkbox" id="basemap">日本地図を表示</label>
+    <!-- 地理院タイルは出典の明示が要る。明るさを反転しているので「加工」と書く -->
+    <p id="attrib" hidden><a href="https://maps.gsi.go.jp/development/ichiran.html"
+       target="_blank" rel="noopener">地理院タイル</a>（淡色地図）を加工</p>
   </div>
 
   <div id="info" class="overlay card">

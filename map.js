@@ -177,6 +177,144 @@
     return { buf: b, n: arr.length / 2 };
   }
 
+  // ── 日本地図（地理院タイル）────────────────────────────────
+  // 海岸線と県境だけでは場所の見当が付きにくい。**選んだときだけ**地図を敷く。
+  // 国土地理院の「淡色地図」を読み、明るさを反転して夜景の地色に馴染ませる。
+  // 色は海岸線と同じ暖色寄りのニュートラル。交通データ（寒色）と混ざらないように、
+  // また「データなし」の点より明るくならないように抑える。
+  // 既定では出さない。出したときだけ外部（cyberjapandata.gsi.go.jp）へ取りに行く。
+  var TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+  var TILE_MIN = 5, TILE_MAX = 18;     // 淡色地図が用意されている範囲
+  var TILE_KEEP = 256;                 // 手元に残す枚数。超えたら使っていない古い順に捨てる
+  var TVS = [
+    'attribute vec2 a_unit;',
+    'uniform vec2 u_center;',
+    'uniform float u_scale;',
+    'uniform vec2 u_res;',
+    'uniform vec3 u_tile;',      // タイル左上（メルカトル）と一辺
+    'varying vec2 v_uv;',
+    'void main(){',
+    '  vec2 w = u_tile.xy + a_unit * u_tile.z;',
+    '  vec2 px = (w - u_center) * u_scale + u_res * 0.5;',
+    '  gl_Position = vec4(px.x / u_res.x * 2.0 - 1.0, 1.0 - px.y / u_res.y * 2.0, 0.0, 1.0);',
+    '  v_uv = a_unit;',
+    '}'
+  ].join('\n');
+  var TFS = [
+    'precision mediump float;',
+    'uniform sampler2D u_tex;',
+    'uniform vec3 u_ground;',
+    'uniform vec3 u_ink;',
+    'varying vec2 v_uv;',
+    'void main(){',
+    '  vec3 c = texture2D(u_tex, v_uv).rgb;',
+    // 白地に灰色の線と文字 → 反転すると、暗い地に明るい線と文字になる。
+    // 淡色地図の海は薄い水色で、そのまま反転すると陸より明るく浮く。
+    // 下を 0.12 で切って、海も陸も同じ地色に沈める（境は海岸線が引く）
+    '  float v = smoothstep(0.12, 0.62, 1.0 - dot(c, vec3(0.299, 0.587, 0.114)));',
+    '  gl_FragColor = vec4(mix(u_ground, u_ink, v), 1.0);',
+    '}'
+  ].join('\n');
+  var tprog = program(TVS, TFS);
+  var TA = gl.getAttribLocation(tprog, 'a_unit');
+  var TU = {};
+  ['u_center', 'u_scale', 'u_res', 'u_tile', 'u_tex', 'u_ground', 'u_ink'].forEach(function (n) {
+    TU[n] = gl.getUniformLocation(tprog, n);
+  });
+  var UNIT = buffer(new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]));
+  var tiles = {};            // 'z/x/y' → { ok, tex, used }
+  var tileTick = 0;
+  var baseOn = false;
+
+  function tileGet(z, x, y) {
+    var key = z + '/' + x + '/' + y, t = tiles[key];
+    if (t) { t.used = tileTick; return t; }
+    t = tiles[key] = { ok: false, tex: null, used: tileTick };
+    var img = new Image();
+    img.crossOrigin = 'anonymous';     // WebGL に読ませるには CORS が要る。地理院は許可している
+    img.onload = function () {
+      if (tiles[key] !== t) return;    // 待つ間に捨てた
+      t.tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.generateMipmap(gl.TEXTURE_2D);   // 全国表示では縮めて貼るので、ちらつかないよう段を作る
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      t.ok = true;
+      if (baseOn) render();
+    };
+    // 海の上など、タイルが無い所もある。取り直さず、地色のままにする
+    img.onerror = function () { t.failed = true; };
+    img.src = TILE_URL.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+    return t;
+  }
+
+  function tilePrune() {
+    var keys = Object.keys(tiles);
+    if (keys.length <= TILE_KEEP) return;
+    keys.sort(function (a, b) { return tiles[a].used - tiles[b].used; });
+    keys.slice(0, keys.length - TILE_KEEP).forEach(function (k) {
+      if (tiles[k].used === tileTick) return;   // いま描いている分は残す
+      if (tiles[k].tex) gl.deleteTexture(tiles[k].tex);
+      delete tiles[k];
+    });
+  }
+
+  function drawBase() {
+    tileTick++;
+    // 文字が元の大きさで読める段を選ぶ。CSSピクセルで合わせる
+    var z = Math.round(Math.log(view.k / 256) / Math.LN2);
+    z = Math.max(TILE_MIN, Math.min(TILE_MAX, z));
+    var n = Math.pow(2, z);
+    var tx0 = Math.max(0, Math.floor((view.x - W / 2 / view.k) * n));
+    var tx1 = Math.min(n - 1, Math.floor((view.x + W / 2 / view.k) * n));
+    var ty0 = Math.max(0, Math.floor((view.y - H / 2 / view.k) * n));
+    var ty1 = Math.min(n - 1, Math.floor((view.y + H / 2 / view.k) * n));
+
+    // 読み込み中の所は、手元にある粗い段のタイルで埋める。真っ暗に抜けるとちらつく
+    var want = {};
+    for (var ty = ty0; ty <= ty1; ty++) {
+      for (var tx = tx0; tx <= tx1; tx++) {
+        var t = tileGet(z, tx, ty);
+        if (t.ok) { want[z + '/' + tx + '/' + ty] = [z, tx, ty, t]; continue; }
+        for (var up = 1; up <= 4 && z - up >= TILE_MIN; up++) {
+          var pk = (z - up) + '/' + (tx >> up) + '/' + (ty >> up), p = tiles[pk];
+          if (p && p.ok) {
+            p.used = tileTick;
+            want[pk] = [z - up, tx >> up, ty >> up, p];
+            break;
+          }
+        }
+      }
+    }
+    // 粗い段を先に、細かい段を後に
+    var list = Object.keys(want).map(function (k) { return want[k]; })
+      .sort(function (a, b) { return a[0] - b[0]; });
+
+    gl.useProgram(tprog);
+    gl.disable(gl.BLEND);
+    gl.uniform2f(TU.u_center, view.x, view.y);
+    gl.uniform1f(TU.u_scale, view.k);
+    gl.uniform2f(TU.u_res, W, H);
+    gl.uniform1i(TU.u_tex, 0);
+    gl.uniform3f(TU.u_ground, 0.027, 0.047, 0.067);
+    // 文字の明るさ。「データなし」の点（0.23, 0.34, 0.44）と同じくらいに留め、上に出さない
+    gl.uniform3f(TU.u_ink, 0.33, 0.315, 0.29);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, UNIT.buf);
+    gl.enableVertexAttribArray(TA);
+    gl.vertexAttribPointer(TA, 2, gl.FLOAT, false, 0, 0);
+    list.forEach(function (e) {
+      var s = 1 / Math.pow(2, e[0]);
+      gl.bindTexture(gl.TEXTURE_2D, e[3].tex);
+      gl.uniform3f(TU.u_tile, e[1] * s, e[2] * s, s);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    });
+    tilePrune();
+  }
+
   // 鉄道は GL_LINES 用に線分の対へ展開する
   var RAIL_BUF = {};
   STATUS.forEach(function (s) {
@@ -375,6 +513,8 @@
   function draw() {
     gl.clearColor(0.027, 0.047, 0.067, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    // 日本地図はいちばん下。選んだときだけ
+    if (baseOn) drawBase();
     gl.useProgram(prog);
     setUniforms();
     gl.enable(gl.BLEND);
@@ -1223,6 +1363,19 @@
     e.preventDefault();
     if (hitList.length) { flyTo(hitList[0]); closeHits(); qEl.blur(); }
   });
+
+  // 日本地図の表示。**最初は出さない。** 戻るで開き直したときに
+  // チェックが復元されることがあるので、読み込み時に必ず外す
+  var baseEl = document.getElementById('basemap');
+  var attrEl = document.getElementById('attrib');
+  if (baseEl) {
+    baseEl.checked = false;
+    baseEl.addEventListener('change', function () {
+      baseOn = baseEl.checked;
+      if (attrEl) attrEl.hidden = !baseOn;
+      render();
+    });
+  }
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
   document.getElementById('zout').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.6); };
