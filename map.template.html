@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>交通データ夜景図</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,6 +167,27 @@ dl.tdef dd{margin:0}
   display:inline-block; font-size:.68rem; padding:.1rem .45rem; border-radius:2px;
   border:1px solid currentColor; margin-bottom:.5rem;
 }
+/* 系統。バス停を選ぶと、同じ系統の停留所の内訳を出す */
+#info{max-height:min(24rem, 58vh); overflow:auto}
+#info .rt{margin:.55rem 0 0; padding-top:.5rem; border-top:1px solid var(--rule)}
+#info .rt-h{display:flex; align-items:baseline; justify-content:space-between; gap:.6rem; font-size:.8rem}
+#info .rt-h span{color:var(--ink-3); font-size:.7rem; text-align:right}
+#info .rt-pick{display:flex; flex-wrap:wrap; gap:.25rem; margin:.4rem 0 .1rem; max-height:4.8rem; overflow:auto}
+#info .rt-pick button{
+  font:inherit; font-size:.68rem; padding:.1rem .45rem; border-radius:2px; cursor:pointer;
+  background:transparent; color:var(--ink-3); border:1px solid var(--rule);
+}
+#info .rt-pick button[aria-pressed="true"]{color:var(--ink); border-color:var(--ink-2)}
+#info .rt-bar{display:flex; height:.4rem; margin:.45rem 0 .3rem; background:var(--rule)}
+#info .rt-bar i{display:block; height:100%}
+#info .rt-nums{margin:0; font-size:.72rem; color:var(--ink-2); line-height:1.6; font-variant-numeric:tabular-nums}
+#info .rt-act{display:flex; gap:.4rem; margin-top:.45rem}
+#info .rt-act button{
+  font:inherit; font-size:.7rem; padding:.15rem .6rem; cursor:pointer; border-radius:3px;
+  background:rgba(14,23,32,.93); color:var(--ink-2); border:1px solid var(--rule);
+}
+#info .rt-act button:hover, #info .rt-pick button:hover{color:var(--ink)}
+#info button:focus-visible{outline:1px solid var(--ink-2); outline-offset:1px}
 footer{
   position:absolute; left:1rem; top:1rem; z-index:2; font-size:.7rem; color:var(--ink-3);
   max-width:23rem; line-height:1.55;

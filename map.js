@@ -294,7 +294,7 @@
           var ex = wx - a[i], ey = wy - a[i + 1], d = ex * ex + ey * ey;
           if (d < bd) {
             bd = d;
-            best = { mode: id, status: st, name: PT_DATA[id][st].names[i / 2] || '' };
+            best = { mode: id, status: st, name: PT_DATA[id][st].names[i / 2] || '', idx: i / 2 };
           }
         }
       }
@@ -489,6 +489,30 @@
       if (PREF_BUF) drawBuf(PREF_BUF, gl.LINES, [0.380, 0.361, 0.333], 0.17, 1, null, false);
     }
 
+    // 選んだ系統。ほかを暗く沈めてから、その系統の停留所だけを上から描く。
+    // **色は所在の色のまま。** 白い縁で「この系統」を示し、中の色で所在を示す。
+    if (sel && sel.count && on.bus) {
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      var x0 = view.x - W / 2 / view.k, x1 = view.x + W / 2 / view.k;
+      var y0 = view.y - H / 2 / view.k, y1 = view.y + H / 2 / view.k;
+      gl.bindBuffer(gl.ARRAY_BUFFER, DIM_BUF.buf);
+      gl.bufferData(gl.ARRAY_BUFFER,
+                    new Float32Array([x0, y0, x1, y0, x0, y1, x0, y1, x1, y0, x1, y1]),
+                    gl.DYNAMIC_DRAW);
+      DIM_BUF.n = 6;
+      drawBuf(DIM_BUF, gl.TRIANGLES, [0.027, 0.047, 0.067], 0.62, 1, null, false);
+      var rs = Math.max(3.2, Math.min(12, 3.2 * Math.pow(z, 0.45)));
+      order.forEach(function (s) {
+        var b = SEL_BUF[s];
+        if (!b || !b.n || offStatus[s]) return;
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        drawBuf(b, gl.POINTS, [1, 1, 1], 0.10, rs * 3.2, null, true);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        drawBuf(b, gl.POINTS, [0.92, 0.95, 0.97], 0.95, rs + 2.4, null, true);
+        drawBuf(b, gl.POINTS, RGB[s], 1, rs, null, true);
+      });
+    }
+
     if (hover && on.rail) {
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       for (var j = 0; j < HALO.length; j++) {
@@ -546,7 +570,8 @@
   // ── 情報パネル ──────────────────────────────────────────
   var info = document.getElementById('info');
   var HINT = '<p class="hint">路線や停留所にカーソルを合わせる（スマホはタップ）と、'
-           + '事業者名とデータの所在が出ます。</p>';
+           + '事業者名とデータの所在が出ます。'
+           + 'バス停を押すと、同じ系統の停留所がまとめて光ります。</p>';
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -625,6 +650,179 @@
       (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>';
   }
 
+  // ── 系統 ────────────────────────────────────────────────
+  // バス停を選ぶと、**同じ系統の停留所をまとめて光らせる。**
+  // 系統名は国土数値情報 P11（2022年）のもので、所在に関係なく全停留所に付いている。
+  // P11 は停留所の順番を持たないので、**線では結ばない。** 結ぶには順番を推測するしかない。
+  // データ（2.7MB）は初めて選んだときに読む。最初の表示を重くしないため。
+  var ROUTES = null, ROUTES_WAIT = null;
+  var sel = null;            // { g, pt, list: [系統番号], k: 見ている系統, count, bb }
+  var SEL_BUF = {};          // 選んだ系統の点。所在ごと
+  var DIM_BUF = { buf: gl.createBuffer(), n: 0 };
+
+  // 点の通し番号。build_map_data.py と同じく、所在の順に数える
+  var BUS_OFF = {}, BUS_N = 0;
+  BUS_RANK.forEach(function (s) {
+    BUS_OFF[s] = BUS_N;
+    BUS_N += BUSPTS[s] ? BUSPTS[s].length / 2 : 0;
+  });
+  function busStatusOf(g) {
+    for (var r = BUS_RANK.length - 1; r >= 0; r--) {
+      if (g >= BUS_OFF[BUS_RANK[r]]) return BUS_RANK[r];
+    }
+    return BUS_RANK[0];
+  }
+
+  function loadRoutes() {
+    if (ROUTES) return Promise.resolve(ROUTES);
+    if (ROUTES_WAIT) return ROUTES_WAIT;
+    ROUTES_WAIT = fetch('routes.json').then(function (res) {
+      if (!res.ok) throw new Error('routes.json ' + res.status);
+      return res.json();
+    }).then(function (d) {
+      // 地図と別の回に作った routes.json だと、番号が別の停留所を指してしまう
+      if (d.n !== BUS_N) throw new Error('routes.json の停留所数が地図と違う');
+      // 停留所 → 系統 の逆引きを、詰めた配列で一度だけ作る
+      var cnt = new Int32Array(BUS_N + 1), m = d.m, i, j, g;
+      for (i = 0; i < m.length; i++) {
+        g = 0;
+        for (j = 0; j < m[i].length; j++) { g += m[i][j]; cnt[g + 1]++; }
+      }
+      for (i = 0; i < BUS_N; i++) cnt[i + 1] += cnt[i];
+      var at = cnt.slice(0, BUS_N), ids = new Int32Array(cnt[BUS_N]);
+      for (i = 0; i < m.length; i++) {
+        g = 0;
+        for (j = 0; j < m[i].length; j++) { g += m[i][j]; ids[at[g]++] = i; }
+      }
+      ROUTES = { ops: d.ops, routes: d.routes, m: m, start: cnt, ids: ids };
+      return ROUTES;
+    });
+    // 失敗したら、次に選んだときに読み直す
+    ROUTES_WAIT.catch(function () { ROUTES_WAIT = null; });
+    return ROUTES_WAIT;
+  }
+
+  function selectStop(pt) {
+    var g = BUS_OFF[pt.status] + pt.idx;
+    sel = { g: g, pt: pt, list: [], k: 0 };
+    BUS_RANK.forEach(function (s) { if (SEL_BUF[s]) SEL_BUF[s].n = 0; });
+    showPointInfo(pt);
+    info.insertAdjacentHTML('beforeend',
+      '<div class="rt"><p class="rt-nums">系統を読み込んでいます…</p></div>');
+    loadRoutes().then(function (R) {
+      if (!sel || sel.g !== g) return;         // 待つ間に別の停留所を選んだ
+      var list = [];
+      for (var i = R.start[g]; i < R.start[g + 1]; i++) list.push(R.ids[i]);
+      // 停留所の多い系統を先に。本線が頭に来る
+      list.sort(function (a, b) { return R.m[b].length - R.m[a].length; });
+      sel.list = list;
+      if (list.length) setRoute(0);
+      else showRoute();
+    }, function (err) {
+      if (!sel || sel.g !== g) return;
+      console.error('系統を読み込めない:', err);
+      sel.failed = true;
+      showRoute();
+    });
+  }
+
+  function setRoute(k) {
+    sel.k = k;
+    var d = ROUTES.m[sel.list[k]], per = {}, bb = [1, 1, 0, 0], g = 0;
+    BUS_RANK.forEach(function (s) { per[s] = []; });
+    for (var j = 0; j < d.length; j++) {
+      g += d[j];
+      var s = busStatusOf(g), i = (g - BUS_OFF[s]) * 2;
+      var x = BUSPTS[s][i], y = BUSPTS[s][i + 1];
+      per[s].push(x, y);
+      if (x < bb[0]) bb[0] = x;
+      if (y < bb[1]) bb[1] = y;
+      if (x > bb[2]) bb[2] = x;
+      if (y > bb[3]) bb[3] = y;
+    }
+    sel.bb = bb;
+    sel.count = {};
+    BUS_RANK.forEach(function (s) {
+      sel.count[s] = per[s].length / 2;
+      var b = SEL_BUF[s] || (SEL_BUF[s] = { buf: gl.createBuffer(), n: 0 });
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(per[s]), gl.DYNAMIC_DRAW);
+      b.n = per[s].length / 2;
+    });
+    showRoute();
+    render();
+  }
+
+  function clearRoute() {
+    if (!sel) return;
+    sel = null;
+    BUS_RANK.forEach(function (s) { if (SEL_BUF[s]) SEL_BUF[s].n = 0; });
+    render();
+  }
+
+  function showRoute() {
+    if (!sel) return;
+    showPointInfo(sel.pt);
+    var h;
+    if (sel.failed) {
+      h = '<p class="rt-nums">系統のデータを読み込めませんでした。</p>';
+    } else if (!sel.list.length) {
+      h = '<p class="rt-nums">この停留所には系統名がありません。</p>';
+    } else {
+      var R = ROUTES, rt = R.routes[sel.list[sel.k]], c = sel.count, n = 0, lit = 0;
+      ORDER4.forEach(function (s) {
+        n += c[s];
+        if (s !== 'データなし') lit += c[s];
+      });
+      var bar = ORDER4.map(function (s) {
+        return c[s] ? '<i style="width:' + (c[s] / n * 100).toFixed(2) +
+                      '%;background:' + HEX[s] + '"></i>' : '';
+      }).join('');
+      var nums = ORDER4.filter(function (s) { return c[s]; }).map(function (s) {
+        return '<span style="color:' + HEX[s] + '">' + esc(LABEL[s]) + ' ' + fmt(c[s]) + '</span>';
+      }).join('　');
+      var pick = sel.list.length < 2 ? '' :
+        '<div class="rt-pick" role="group" aria-label="この停留所を通る系統">' +
+        sel.list.map(function (id, k) {
+          return '<button type="button" data-k="' + k + '" aria-pressed="' + (k === sel.k) + '">' +
+                 esc(R.routes[id][1]) + '</button>';
+        }).join('') + '</div>';
+      h = '<div class="rt-h"><b>系統 ' + esc(rt[1]) + '</b><span>' + esc(R.ops[rt[0]]) + '</span></div>' +
+          pick +
+          '<div class="rt-bar">' + bar + '</div>' +
+          '<p class="rt-nums">停留所 ' + fmt(n) + '　うちデータあり ' + fmt(lit) + '<br>' + nums + '</p>' +
+          '<div class="rt-act"><button type="button" data-act="fit">この系統に寄る</button>' +
+          '<button type="button" data-act="close">閉じる</button></div>';
+    }
+    info.insertAdjacentHTML('beforeend', '<div class="rt">' + h + '</div>' +
+      '<p class="tnote">系統名は国土数値情報 P11（2022年）のもので、ODPT や GTFS の路線名とは' +
+      '一致しないことがあります。P11 は停留所の順番を持たないため、線では結んでいません。' +
+      '光っている停留所は、別の事業者のデータで光っている場合もあります。</p>');
+  }
+
+  function fitBox(bb) {
+    var pad = 1.4;
+    view.x = (bb[0] + bb[2]) / 2;
+    view.y = (bb[1] + bb[3]) / 2;
+    view.k = Math.min(W / Math.max(1e-6, (bb[2] - bb[0]) * pad),
+                      H / Math.max(1e-6, (bb[3] - bb[1]) * pad));
+    view.k = Math.max(baseScale() * 1.2, Math.min(baseScale() * 200, view.k));
+    render();
+  }
+
+  info.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b || !sel) return;
+    if (b.dataset.k != null) { setRoute(+b.dataset.k); return; }
+    if (b.dataset.act === 'close') { clearRoute(); showInfo(null); return; }
+    if (b.dataset.act === 'fit' && sel.bb) fitBox(sel.bb);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !sel || document.activeElement === qEl) return;
+    clearRoute();
+    showInfo(null);
+  });
+
   // ── 左パネル ────────────────────────────────────────────
   var ORDER4 = ['通年オープン', '期間限定', 'ODPT外にあり', 'データなし'];
   MODES.forEach(function (m) { MODE_LABEL[m.id] = m.label; });
@@ -680,6 +878,7 @@
       on[id] = !on[id];
       k.setAttribute('aria-pressed', String(on[id]));
       if (id === 'rail' && !on.rail) { setHover(null); showInfo(null); }
+      if (id === 'bus' && !on.bus && sel) { clearRoute(); showInfo(null); }
       render();
     });
   });
@@ -808,6 +1007,9 @@
       render();
       return;
     }
+    // 系統を選んでいる間は、ホバーで情報欄を書き換えない。
+    // 書き換えると、系統の内訳を読んだりボタンを押したりする前に消えてしまう
+    if (sel) return;
     var r = cv.getBoundingClientRect();
     var px = e.clientX - r.left, py = e.clientY - r.top;
     var f = on.rail ? pick(px, py) : null;
@@ -842,13 +1044,27 @@
     var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
     var touch = tap.touch;
     tap = null;
-    if (!touch || moved > 10) return;      // 動いていたら地図を動かしただけ
+    // 動いていたら地図を動かしただけ。マウスは指ほどぶれないので狭く取る
+    if (moved > (touch ? 10 : 4)) return;
     var r = cv.getBoundingClientRect();
     var px = e.clientX - r.left, py = e.clientY - r.top;
-    var f = on.rail ? pick(px, py, TOUCH_TOL) : null;
+    // 鉄道を先に見る。これまでどおり、線の上を押したら路線の情報を出す
+    var f = on.rail ? pick(px, py, touch ? TOUCH_TOL : 7) : null;
+    var pt = f ? null : pickPoint(px, py, touch ? TOUCH_TOL : 8);
+    // バス停を押したら、その系統を光らせる。マウスでも指でも同じ
+    if (pt && pt.mode === 'bus') {
+      if (hover) setHover(null);
+      hoverPt = null;
+      hoverPtKey = null;
+      selectStop(pt);
+      render();
+      return;
+    }
+    // それ以外を押したら、系統の選択は外す
+    if (sel) { clearRoute(); showInfo(null); }
+    if (!touch) return;                    // マウスはホバーで足りている
     if (f) { setHover(f); showInfo(f); render(); return; }
     if (hover) { setHover(null); render(); }
-    var pt = pickPoint(px, py, TOUCH_TOL);
     hoverPt = pt;
     hoverPtKey = pt ? pt.mode + pt.status + pt.name : null;
     showPointInfo(pt);
@@ -859,7 +1075,8 @@
     if (hover) { setHover(null); render(); }
     hoverPt = null;
     hoverPtKey = null;
-    showInfo(null);
+    // 系統を選んでいる間は残す。情報欄のボタンへ移るときにもここを通る
+    if (!sel) showInfo(null);
   });
   cv.addEventListener('wheel', function (e) {
     e.preventDefault();
@@ -929,6 +1146,7 @@
       view.k = Math.max(view.k, baseScale() * 26); // 街の形が見える程度まで寄る
     }
     closeIntro();
+    clearRoute();              // 探したものを出すので、選んでいた系統は外す
     showFound(i);
     render();
   }
