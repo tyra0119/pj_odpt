@@ -204,21 +204,31 @@
     'precision mediump float;',
     'uniform sampler2D u_tex;',
     'uniform vec3 u_ground;',
-    'uniform vec3 u_ink;',
+    'uniform vec3 u_line;',
+    'uniform vec3 u_text;',
+    'uniform vec2 u_tband;',     // 文字とみなす濃さの範囲。ズームで変える
     'varying vec2 v_uv;',
     'void main(){',
     '  vec3 c = texture2D(u_tex, v_uv).rgb;',
-    // 白地に灰色の線と文字 → 反転すると、暗い地に明るい線と文字になる。
-    // 淡色地図の海は薄い水色で、そのまま反転すると陸より明るく浮く。
-    // 下を 0.12 で切って、海も陸も同じ地色に沈める（境は海岸線が引く）
-    '  float v = smoothstep(0.12, 0.62, 1.0 - dot(c, vec3(0.299, 0.587, 0.114)));',
-    '  gl_FragColor = vec4(mix(u_ground, u_ink, v), 1.0);',
+    '  float d = 1.0 - dot(c, vec3(0.299, 0.587, 0.114));',
+    // 白地に灰色の線と文字。反転して、暗い地に線と文字を浮かせる。
+    // **線と文字は分けて持ち上げる。** 1つの色で持ち上げると、文字を読める明るさに
+    // した時点で道路の網が眩しくなり、道路を抑えると拡大時に文字が読めなくなる。
+    //   道路・境界（淡い灰）… 0.06〜0.22 で暗めの線の色へ
+    //   文字（濃い灰）     … u_tband の範囲で明るい文字の色へ。平方根で持ち上げ、
+    //                         文字の縁（中間の灰）まで明るくして太らせる
+    // **淡色地図の文字の濃さは縮尺で違う。** ズーム16では黒に近いが、ズーム10〜12では
+    // いちばん濃い文字でも反転後0.45前後。範囲を固定すると、中くらいの縮尺で文字が沈む。
+    // 淡色地図の海は薄い水色。0.06 より下は地色のままにし、陸より明るく浮かせない
+    '  vec3 col = mix(u_ground, u_line, smoothstep(0.06, 0.22, d));',
+    '  float t = sqrt(smoothstep(u_tband.x, u_tband.y, d));',
+    '  gl_FragColor = vec4(mix(col, u_text, t), 1.0);',
     '}'
   ].join('\n');
   var tprog = program(TVS, TFS);
   var TA = gl.getAttribLocation(tprog, 'a_unit');
   var TU = {};
-  ['u_center', 'u_scale', 'u_res', 'u_tile', 'u_tex', 'u_ground', 'u_ink'].forEach(function (n) {
+  ['u_center', 'u_scale', 'u_res', 'u_tile', 'u_tex', 'u_ground', 'u_line', 'u_text', 'u_tband'].forEach(function (n) {
     TU[n] = gl.getUniformLocation(tprog, n);
   });
   var UNIT = buffer(new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]));
@@ -264,8 +274,9 @@
 
   function drawBase() {
     tileTick++;
-    // 文字が元の大きさで読める段を選ぶ。CSSピクセルで合わせる
-    var z = Math.round(Math.log(view.k / 256) / Math.LN2);
+    // 文字が読める段を選ぶ。CSSピクセルで合わせ、少しだけ粗い段に寄せる。
+    // 細かい段を縮めて貼ると、淡色地図の細い文字がさらに細く潰れて読めない
+    var z = Math.floor(Math.log(view.k / 256) / Math.LN2 + 0.25);
     z = Math.max(TILE_MIN, Math.min(TILE_MAX, z));
     var n = Math.pow(2, z);
     var tx0 = Math.max(0, Math.floor((view.x - W / 2 / view.k) * n));
@@ -300,8 +311,15 @@
     gl.uniform2f(TU.u_res, W, H);
     gl.uniform1i(TU.u_tex, 0);
     gl.uniform3f(TU.u_ground, 0.027, 0.047, 0.067);
-    // 文字の明るさ。「データなし」の点（0.23, 0.34, 0.44）と同じくらいに留め、上に出さない
-    gl.uniform3f(TU.u_ink, 0.33, 0.315, 0.29);
+    // 線は暗く、文字は明るく。
+    // 控えめにするのは全国表示だけ（県名などが大きく並び、データより目立ってしまう）。
+    // ズーム7で7割、10以上で最大。**寄ったら読めることを優先する**
+    var tk = 0.70 + 0.30 * Math.max(0, Math.min(1, (z - 7) / 3));
+    // 文字とみなす濃さ。ズーム12以下は 0.26〜0.46、15以上は 0.30〜0.62
+    var zb = Math.max(0, Math.min(1, (z - 12) / 3));
+    gl.uniform2f(TU.u_tband, 0.26 + 0.04 * zb, 0.46 + 0.16 * zb);
+    gl.uniform3f(TU.u_line, 0.17, 0.165, 0.155);
+    gl.uniform3f(TU.u_text, 0.88 * tk, 0.85 * tk, 0.78 * tk);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindBuffer(gl.ARRAY_BUFFER, UNIT.buf);
     gl.enableVertexAttribArray(TA);
