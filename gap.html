@@ -106,6 +106,7 @@ tr.low td{color:var(--gap); font-weight:600}
 .b-odpt .track span{background:var(--ok)}
 .b-repo .track span{background:var(--accent)}
 .b-none .track span{background:var(--gap)}
+.b-low .track span{background:var(--gap); opacity:.55}
 .bar .val{display:flex; gap:.7rem; align-items:baseline; font-size:.8rem}
 .bar .val b{font-family:"IBM Plex Mono",monospace; font-size:1rem}
 .bar .val em{
@@ -252,7 +253,19 @@ footer{
 <h3>その816件を、広い順に</h3>
 <p class="prefs" style="gap:.35rem"><span style="border-bottom-color:var(--gap)">知床半島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">天塩川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">石垣島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">サロベツ原野<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">西表島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">慶良間諸島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">宮古島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">九十九島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span><span style="border-bottom-color:var(--gap)">裏磐梯湖沼群<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">福島県</small></span><span style="border-bottom-color:var(--gap)">屈斜路湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">支笏湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">洞爺湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">青森県</small></span><span style="border-bottom-color:var(--gap)">浦内川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">霧多布湿原<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">国立公園十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">宇久島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span></p>
 <p><strong>島と、国立公園と、湖。</strong>人が交通手段をいちばん知りたい場所である。地元の人は経路を知っているが、訪れる人は知らない。その差を埋めるのが経路案内の役目だとすれば、必要とされる場所ほどデータが無いことになる。<em>そして、そのほとんどはバスが走っていない場所ではない。</em></p>
-<div class="note"><p><strong>ただし「人気」は測っていない。</strong>使ったのは観光資源の位置であって、入込客数ではない。分かるのは<strong>主要な観光資源がそこにある</strong>ところまでである。「データあり」901件のうち192件は期間限定だけなので、2027年3月13日に空白側へ移る。</p></div>
+<div class="note"><p>「データあり」901件のうち192件は期間限定だけなので、2027年3月13日に空白側へ移る。</p></div>
+<h3>訪れる人の数と並べる</h3>
+<p>観光資源の件数は、県ごとに収録の細かさがまるで違う（地点の観光資源は新潟県1,913件に対し、千葉県0件）。これでは県をまたいで比べられない。そこで、全国を同じ方法で測った<strong>観光来訪者数</strong>（市区町村別・2025年）を、市区町村ごとのバスのデータと並べた。並べ比べられたのは1,788市区町村。</p>
+<div class="bars">
+<div class="bar b-none"><div class="lab">バスのデータが1件も見つからない（880市区町村）</div><div class="track"><span style="width:28.2%"></span></div><div class="val"><b>28.2%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-low"><div class="lab">データのあるバス停が10%未満（188市区町村）</div><div class="track"><span style="width:21.5%"></span></div><div class="val"><b>21.5%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-repo"><div class="lab">データのあるバス停が10〜50%（159市区町村）</div><div class="track"><span style="width:9.5%"></span></div><div class="val"><b>9.5%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-odpt"><div class="lab">データのあるバス停が50%以上（561市区町村）</div><div class="track"><span style="width:40.9%"></span></div><div class="val"><b>40.9%</b><em>観光来訪者数に占める割合</em></div></div>
+</div>
+<div class="note" style="border-left-color:var(--accent)"><p>市区町村ごとの観光来訪者数を足すと、<strong>その28.2%は、バスのデータが1件も見つからない880市区町村のもの</strong>である。データのあるバス停が10%未満の市区町村まで含めると49.7%。訪れる人の多い市区町村でも、バスのデータは見つからない。</p></div>
+<h3>訪れる人が多いのに、バスのデータが1件も見つからない市区町村</h3>
+<p class="prefs" style="gap:.35rem"><span style="border-bottom-color:var(--gap)">大阪府大阪市中央区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">1,246万人</small></span><span style="border-bottom-color:var(--gap)">佐賀県佐賀市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">1,087万人</small></span><span style="border-bottom-color:var(--gap)">愛媛県松山市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">916万人</small></span><span style="border-bottom-color:var(--gap)">愛知県豊橋市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">808万人</small></span><span style="border-bottom-color:var(--gap)">兵庫県三木市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">796万人</small></span><span style="border-bottom-color:var(--gap)">千葉県千葉市美浜区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">791万人</small></span><span style="border-bottom-color:var(--gap)">長崎県長崎市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">645万人</small></span><span style="border-bottom-color:var(--gap)">愛知県名古屋市東区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">619万人</small></span><span style="border-bottom-color:var(--gap)">佐賀県鳥栖市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">595万人</small></span><span style="border-bottom-color:var(--gap)">広島県広島市中区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">585万人</small></span><span style="border-bottom-color:var(--gap)">鳥取県鳥取市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">561万人</small></span><span style="border-bottom-color:var(--gap)">大阪府大阪市西区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">544万人</small></span><span style="border-bottom-color:var(--gap)">広島県廿日市市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">518万人</small></span><span style="border-bottom-color:var(--gap)">愛媛県今治市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">463万人</small></span></p>
+<p class="fine">この統計の観光地点には、寺社や公園だけでなくスポーツ施設・展示会場・道の駅・高速道路のSA/PA も入る。数え方はスマートフォンの位置情報で、自宅から20km未満の人と通勤・通学は数えない。観光地点の一部は自治体の申出で登録されるため、都道府県どうしの比較には注意が要る。足した値は延べ。<a href="https://www.nihon-kankou.or.jp/home/jigyou/research/d-toukei/">デジタル観光統計オープンデータ</a>（日本観光振興協会）を加工して作成。</p>
 </section>
 <section class="wrap">
 <span class="sec-no">07 — 提案</span>
@@ -299,7 +312,8 @@ footer{
 <li>「乗換案内が作れる」は<strong>静的データが両モードにある</strong>という意味で、実際の乗換に足る品質があるかまでは見ていない。</li>
 <li>PLATEAU の地域数は G空間情報センターのデータセット名から数えた。同名の市区町村（森町・清水町・府中市）は名前では決まらないので、配布範囲の位置で判別している。公式サイトの表記は306地域で、1件の差は府中市を東京都と広島県に分けたぶん。</li>
 <li>地図上の PLATEAU の点は配布範囲の中心だが、島嶼や海岸沿いでは重心が海に落ちるため、<strong>その県の最も近いバス停に寄せている</strong>（24件）。市役所の位置ではない。</li>
-<li>観光資源は国土数値情報 P12-14。<strong>入込客数を持たない</strong>ので、人気の大小は言えない。面と線だけを使い、点（山岳・温泉など）は範囲を持たないため除いた。判定半径は輪郭から2kmで、これを広げると市街地のバス停を拾って意味が薄くなる。「データあり」には期間限定も含めている。「時刻表なし」と「停留所なし」の線引きは、国土数値情報 P11 の停留所と N02 の駅の位置で見ている。2km の外に停留所があっても「停留所なし」に入る。</li>
+<li>観光資源は国土数値情報 P12-14。<strong>入込客数を持たない</strong>ので、観光資源そのものの人気の大小は言えない（訪れる人の数は、市区町村の単位で別の統計から見た）。面と線だけを使い、点（山岳・温泉など）は範囲を持たないため除いた。判定半径は輪郭から2kmで、これを広げると市街地のバス停を拾って意味が薄くなる。「データあり」には期間限定も含めている。「時刻表なし」と「停留所なし」の線引きは、国土数値情報 P11 の停留所と N02 の駅の位置で見ている。2km の外に停留所があっても「停留所なし」に入る。</li>
+<li>観光来訪者数は日本観光振興協会「デジタル観光統計オープンデータ」。月の値を1年分足した。浜松市は2024年の区の再編で区どうしを結べないため市全体でまとめ、福島県の6町村（富岡・大熊・双葉・浪江・葛尾・飯舘）はバスの側の一覧に無いので並べ比べから外した。12か月分そろわない市区町村は、年の値が小さく出る。</li>
 <li>Project LINKS と連携先のデータは、場所の軸で数えていない。全国一律か、地域の概念を持たないため。</li>
 <li>バスの母集団 P11 は2022年、オープンデータ側は2026年。4年のずれがある。</li>
 </ul>
@@ -307,7 +321,7 @@ footer{
 </section>
 </main>
 <footer class="wrap">
-出典——<a href="https://challenge2026.odpt.org/ja/outline.html">公共交通オープンデータチャレンジ2026 開催概要</a>、<a href="https://challenge2026.odpt.org/ja/opendata.html">同 公開するオープンデータ</a>、国土数値情報 N02-24 / P11-22 / C28-21 / 500mメッシュ別将来推計人口（国土交通省）、公共交通オープンデータセンター、GTFSデータリポジトリ、歩行空間ナビ・プロジェクト、G空間情報センター（PLATEAU）、国土数値情報 P12-14（観光資源）。すべて <span class="mono">2026-09-09</span> 時点。<br>
+出典——<a href="https://challenge2026.odpt.org/ja/outline.html">公共交通オープンデータチャレンジ2026 開催概要</a>、<a href="https://challenge2026.odpt.org/ja/opendata.html">同 公開するオープンデータ</a>、国土数値情報 N02-24 / P11-22 / C28-21 / 500mメッシュ別将来推計人口（国土交通省）、公共交通オープンデータセンター、GTFSデータリポジトリ、デジタル観光統計オープンデータ（日本観光振興協会、CC BY 4.0、加工して作成）、歩行空間ナビ・プロジェクト、G空間情報センター（PLATEAU）、国土数値情報 P12-14（観光資源）。すべて <span class="mono">2026-09-09</span> 時点。<br>
 <a href="./">交通データ白地図</a> ／ <a href="map.html">交通データ夜景図</a> ／ <a href="concept.html">企画書</a> ／ <a href="data/">カバレッジデータ</a>
 </footer>
 </body>
