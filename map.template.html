@@ -158,6 +158,12 @@ dl.tdef dd{margin:0}
 .bg button:hover{color:var(--ink)}
 .bg button[aria-checked="true"]{color:var(--ink); background:rgba(75,219,247,.12)}
 .bg button:focus-visible{outline:1px solid var(--ink-2); outline-offset:-2px}
+.bg .seg-h{
+  align-self:center; padding:0 .5rem; font-size:.62rem; letter-spacing:.08em;
+  color:var(--ink-3); border-right:1px solid var(--rule);
+}
+.bg .seg-h + button{border-left:0}
+.tkey small{font-size:.66rem; color:var(--ink-3); font-weight:400; margin-left:.25rem}
 /* 出典は見える形で出す決まり。地図の文字と重なっても読めるよう下地を敷く */
 #attrib{margin:0; font-size:.62rem; color:var(--ink-3); text-align:right;
         padding:.1rem .4rem; background:rgba(14,23,32,.88); border-radius:2px}
@@ -353,6 +359,7 @@ footer b{color:var(--ink-2); font-weight:500}
     </div>
     <!-- 背景はどれか1つ（または無し）。海岸線と地図を重ねても情報は増えない -->
     <div class="bg" role="radiogroup" aria-label="背景">
+      <span class="seg-h" aria-hidden="true">背景</span>
       <button type="button" role="radio" data-bg="coast" aria-checked="true">海岸線・県境</button>
       <button type="button" role="radio" data-bg="map" aria-checked="false">日本地図</button>
       <button type="button" role="radio" data-bg="none" aria-checked="false">なし</button>
@@ -361,6 +368,13 @@ footer b{color:var(--ink-2); font-weight:500}
     <p id="attrib"><span data-bg="coast">海岸線：国土数値情報 C23 ／ 県境：Natural Earth</span><span
        data-bg="map" hidden><a href="https://maps.gsi.go.jp/development/ichiran.html"
        target="_blank" rel="noopener">地理院タイル</a>（淡色地図）を加工</span></p>
+    <!-- 観光資源を重ねる。最初は出さない。エリアは P12 の面・線、地点は点（選んだときに読む） -->
+    <div class="bg" role="radiogroup" aria-label="観光資源" id="tourmode">
+      <span class="seg-h" aria-hidden="true">観光資源</span>
+      <button type="button" role="radio" data-tm="off" aria-checked="true">なし</button>
+      <button type="button" role="radio" data-tm="area" aria-checked="false">エリア</button>
+      <button type="button" role="radio" data-tm="all" aria-checked="false">エリア＋地点</button>
+    </div>
   </div>
 
   <div id="info" class="overlay card">

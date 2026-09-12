@@ -414,12 +414,55 @@
     var a = decode(TOUR[id].pts);
     PT_BUF['tour_' + id] = {};
     PT_DATA['tour_' + id] = {};
-    on['tour_' + id] = false;   // 表示と同じトグルで開け閉めする
+    on['tour_' + id] = true;    // 分類ごとの絞り込み。出すかどうかは右上の「観光資源」で決める
     if (!a.length) return;
     // 輪郭だけだと全国表示では細すぎて見えない。代表点も一緒に描く
     PT_BUF['tour_' + id][EXTRA_ST] = buffer(a);
     PT_DATA['tour_' + id][EXTRA_ST] = { xy: a, names: TOUR[id].names || [] };
   });
+
+  // 観光資源を出すか。'off' / 'area'（面・線）/ 'all'（エリア＋地点）。**最初は出さない**
+  var tourMode = 'off';
+  // 地点の観光資源（P12 の点、1.6万件）。PT_DATA ではエリアの代表点（EXTRA_ST）と鍵を分ける
+  var SPOT_ST = '点';
+  var SPOTS = null, SPOTS_WAIT = null;
+  function tourShows(st) {
+    return st === SPOT_ST ? tourMode === 'all' : tourMode !== 'off';
+  }
+  // **地点の件数は都道府県ごとにまるで違う。** 観光地の多さではなく収録の細かさの差。
+  // 比べる使い方をされないよう、数字を添えて書いておく
+  var PM = TOUR.meta.points || null;
+  var SPOT_NOTE = PM
+    ? '地点の観光資源は、都道府県ごとに収録の細かさがまるで違います（' +
+      PM.top.map(function (x) { return x[0] + ' ' + fmt(x[1]) + '件'; }).join('・') + ' に対し、' +
+      PM.bottom.map(function (x) { return x[0] + ' ' + fmt(x[1]) + '件'; }).join('・') + '）。' +
+      '観光地の多さではないので、県どうしを比べる使い方はできません。'
+    : '';
+
+  // 地点は初めて選んだときに読む。最初の表示を重くしないため
+  function loadSpots() {
+    if (SPOTS) return Promise.resolve(SPOTS);
+    if (SPOTS_WAIT) return SPOTS_WAIT;
+    SPOTS_WAIT = fetch('tourpoints.json').then(function (res) {
+      if (!res.ok) throw new Error('tourpoints.json ' + res.status);
+      return res.json();
+    }).then(function (d) {
+      TOUR_IDS.forEach(function (id) {
+        var a = decode(d[id].pts);
+        if (!a.length) return;
+        PT_BUF['tour_' + id][SPOT_ST] = buffer(a);
+        PT_DATA['tour_' + id][SPOT_ST] = { xy: a, names: d[id].names || [] };
+        for (var i = 0; i < a.length; i += 2) {
+          var k = Math.floor(a[i] / PCELL) + ':' + Math.floor(a[i + 1] / PCELL);
+          (PIDX[k] || (PIDX[k] = [])).push(['tour_' + id, SPOT_ST, i]);
+        }
+      });
+      SPOTS = d;
+      return d;
+    });
+    SPOTS_WAIT.catch(function () { SPOTS_WAIT = null; });   // 失敗したら次に選んだとき読み直す
+    return SPOTS_WAIT;
+  }
 
   // 画面上で最も近い点を拾う。格子はメルカトル座標で切る
   var PCELL = 0.0012;
@@ -446,6 +489,7 @@
         for (var n = 0; n < list.length; n++) {
           var id = list[n][0], st = list[n][1], i = list[n][2];
           if (!on[id] || offStatus[st]) continue;
+          if (id.indexOf('tour_') === 0 && !tourShows(st)) continue;
           var a = PT_DATA[id][st].xy;
           var ex = wx - a[i], ey = wy - a[i + 1], d = ex * ex + ey * ey;
           if (d < bd) {
@@ -600,7 +644,7 @@
 
     // 観光エリア。3つの分類はそれぞれ独立に開け閉めできる
     TOUR_IDS.forEach(function (id) {
-      if (!on['tour_' + id]) return;
+      if (tourMode === 'off' || !on['tour_' + id]) return;
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       var seg = TOUR_SEG[id];
       if (seg) {
@@ -626,6 +670,17 @@
       drawBuf(pb, gl.POINTS, TOUR_RGB[id], id === 'data' ? 0.5 : 0.9, psz,
               null, true);
     });
+
+    // 地点の観光資源。エリアの代表点（丸）と見分けられるよう、小さな四角で描く
+    if (tourMode === 'all') {
+      TOUR_IDS.forEach(function (id) {
+        var sb = on['tour_' + id] && PT_BUF['tour_' + id][SPOT_ST];
+        if (!sb) return;
+        var ssz = Math.max(2.2, Math.min(9, 2.2 * Math.pow(z, 0.5)));
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        drawBuf(sb, gl.POINTS, TOUR_RGB[id], id === 'data' ? 0.55 : 0.9, ssz, null, false);
+      });
+    }
 
     // 公共交通以外のデータ。交通機関より下に置くと埋もれるので、上に薄く重ねる
     EXTRA_IDS.forEach(function (id) {
@@ -778,14 +833,16 @@
         '<dt>意味</dt><dd>' + TOUR[tk].long + '</dd>' +
         (stop ? '<dt>' + (tk === 'gap' ? '最寄りの停留所' : '判定に使った停留所') +
                 '</dt><dd>' + esc(stop) + '</dd>' : '') +
-        '<dt>見た範囲</dt><dd>輪郭から2km。ODPT（通年・期間限定）と ODPT外</dd></dl>' +
+        '<dt>見た範囲</dt><dd>' + (pt.status === SPOT_ST ? '地点から2km' : '輪郭から2km') +
+        '。ODPT（通年・期間限定）と ODPT外</dd></dl>' +
         (tk === 'gap'
           ? '<p class="tnote">停留所や駅は現にあります。時刻表が機械可読な形で' +
             '公開されていないだけで、公開されればその日から案内が作れます。' +
             'ODPT に無いという意味ではなく、gtfs-data.jp 等にも無いという意味です。</p>'
           : tk === 'none'
           ? '<p class="tnote">2km以内に停留所も駅もありません。' +
-            'データではなく、交通そのものの空白です。</p>' : '');
+            'データではなく、交通そのものの空白です。</p>' : '') +
+        (pt.status === SPOT_ST && SPOT_NOTE ? '<p class="tnote">' + SPOT_NOTE + '</p>' : '');
       return;
     }
     // 公共交通以外のデータは所在の軸に載らない。何のデータかだけを出す
@@ -1091,9 +1148,10 @@
   // 「空白地帯」と「データが無いだけ」を切り分けて見たい、という要望による。
   var tourEl = document.getElementById('tourkeys');
   tourEl.innerHTML = ['gap', 'none', 'data'].map(function (id) {
-    return '<button class="skey tkey" data-t="' + id + '" aria-pressed="false" title="' +
+    return '<button class="skey tkey" data-t="' + id + '" aria-pressed="true" title="' +
            TOUR[id].long + '"><i style="background:' + TOUR_HEX[id] + '"></i>' +
-           TOUR[id].label + ' <b>' + fmt(TOUR[id].count) + '</b></button>';
+           TOUR[id].label + ' <b>' + fmt(TOUR[id].count) + '</b>' +
+           (PM ? '<small>地点 ' + fmt(PM[id]) + '</small>' : '') + '</button>';
   }).join('') +
     '<dl class="tdef">' + ['gap', 'none', 'data'].map(function (id) {
       return '<dt style="color:' + TOUR_HEX[id] + '">' + TOUR[id].label + '</dt>' +
@@ -1109,7 +1167,9 @@
   });
   document.getElementById('tour-foot').textContent =
     '国土数値情報 P12 の観光資源のうち、範囲を持つ' + fmt(TOUR.meta.areas)
-    + '件（面と線）を輪郭で描いています。既定では消してあり、押すと重なります。'
+    + '件（面と線）を輪郭で描いています。出すかどうかは右上の「観光資源」で選び、'
+    + 'ここでは分類ごとに絞り込めます。「エリア＋地点」では点の観光資源'
+    + (PM ? fmt(PM.total) + '件' : '') + 'も小さな四角で重ねます。'
     + '判定は輪郭から2km。「データあり」は ODPT（通年・期間限定）と '
     + 'GTFSデータリポジトリ等のいずれかにバス停か駅があるもので、'
     + 'そのうち' + fmt(TOUR.meta.temp_only) + '件は期間限定だけなので '
@@ -1118,7 +1178,8 @@
     + '公開されていないもの——ODPT に無いという意味ではなく、'
     + 'gtfs-data.jp 等を含めてどこにも無いという意味です。'
     + '公開されれば、その日から案内が作れます。'
-    + 'P12 は入込客数を持たないので、人気の大小までは分かりません。';
+    + 'P12 は入込客数を持たないので、人気の大小までは分かりません。'
+    + (SPOT_NOTE ? SPOT_NOTE : '');
 
   document.getElementById('legend-foot').textContent =
     '数字は左から ODPT ／ ODPT（期間限定）／ ODPT外 ／ なし。帯はその割合。'
@@ -1436,6 +1497,28 @@
       if (b) setBackground(b.dataset.bg);
     });
     setBackground('coast');
+  }
+
+  // 観光資源。**最初は出さない。** 左の一覧の下のほうにあって気づかれにくかったので、
+  // 背景と同じく右上で選べるようにした。地点は初めて選んだときに読む
+  var tmEl = document.getElementById('tourmode');
+  function setTourMode(v) {
+    tourMode = v;
+    Array.prototype.forEach.call(tmEl.querySelectorAll('[data-tm]'), function (b) {
+      b.setAttribute('aria-checked', String(b.dataset.tm === v));
+    });
+    if (v === 'all' && !SPOTS) {
+      loadSpots().then(function () { render(); }, function (err) {
+        console.error('地点の観光資源を読み込めない:', err);
+      });
+    }
+    render();
+  }
+  if (tmEl) {
+    tmEl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-tm]');
+      if (b) setTourMode(b.dataset.tm);
+    });
   }
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };
