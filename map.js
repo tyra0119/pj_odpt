@@ -918,6 +918,25 @@
     render();
   }
 
+  // 光っている停留所は、誰のデータで光っているか（tools/route_owner.py が位置で判定）。
+  // 途切れる系統では、それが「路線の一部だけ公開」なのか「別の事業者のデータが近くにあるだけ」なのかを言い切る
+  function whoText(own, other, nonbus, lit, n) {
+    var parts = [];
+    if (own) parts.push('この事業者の路線のデータ ' + fmt(own));
+    if (other) parts.push('別の事業者のデータ ' + fmt(other));
+    if (nonbus) parts.push('鉄道・船などのデータ ' + fmt(nonbus));
+    var s = own / lit, msg = '';
+    if (lit < n) {
+      msg = s >= 0.8 ? 'この系統は、路線の一部だけデータが公開されています。'
+          : s <= 0.2 ? 'この系統そのもののデータは見つかっていません。' +
+                       '光っているのは、別の事業者のデータが近くにある停留所です。'
+          : 'この系統の一部のデータと、別の事業者のデータが混ざっています。';
+    } else if (s <= 0.2) {
+      msg = 'すべて光っていますが、この系統そのもののデータは見つかっていません。';
+    }
+    return '光っている理由　' + parts.join('・') + (msg ? '<br><b>' + msg + '</b>' : '');
+  }
+
   function showRoute() {
     if (!sel) return;
     showPointInfo(sel.pt);
@@ -949,13 +968,16 @@
           pick +
           '<div class="rt-bar">' + bar + '</div>' +
           '<p class="rt-nums">停留所 ' + fmt(n) + '　うちデータあり ' + fmt(lit) + '<br>' + nums + '</p>' +
+          (lit && rt.length > 2
+            ? '<p class="rt-who">' + whoText(rt[2], rt[3], rt[4], lit, n) + '</p>' : '') +
           '<div class="rt-act"><button type="button" data-act="fit">この系統に寄る</button>' +
           '<button type="button" data-act="close">閉じる</button></div>';
     }
     info.insertAdjacentHTML('beforeend', '<div class="rt">' + h + '</div>' +
       '<p class="tnote">系統名は国土数値情報 P11（2022年）のもので、ODPT や GTFS の路線名とは' +
       '一致しないことがあります。P11 は停留所の順番を持たないため、線では結んでいません。' +
-      '光っている停留所は、別の事業者のデータで光っている場合もあります。</p>');
+      'どの事業者の路線のデータかは、停留所の位置で判定しています（名前は使っていません）。' +
+      '自治体が事業者の路線を公開している場合も「この事業者の路線のデータ」に数えます。</p>');
   }
 
   function fitBox(bb) {
@@ -1006,7 +1028,8 @@
 
   // 交通機関ごとの内訳。帯は100%積み上げ、下の実数は帯と同じ色で並べる。
   // 母集団が無いモードは割合を出さず、実数だけを示す。
-  rowsEl.innerHTML = MODES.map(function (m) {
+  // 海岸線・県境は交通機関ではないので、ここには並べない。右上の「背景」で選ぶ
+  rowsEl.innerHTML = MODES.filter(function (m) { return m.type !== 'base'; }).map(function (m) {
     // 母集団のあるモードは母集団数、無いモードは確認できた分の合計を出す。
     // 「母集団なし」と言葉で書くより、数を出したほうが読み手が判断しやすい。
     var known = m.n ? m.n.reduce(function (a, b) { return a + b; }, 0) : 0;
@@ -1382,17 +1405,37 @@
     if (hitList.length) { flyTo(hitList[0]); closeHits(); qEl.blur(); }
   });
 
-  // 日本地図の表示。**最初は出さない。** 戻るで開き直したときに
-  // チェックが復元されることがあるので、読み込み時に必ず外す
-  var baseEl = document.getElementById('basemap');
+  // 背景。**海岸線・県境／日本地図／なし のどれか1つ。**
+  // 地図にも海岸線は描かれているので、重ねても情報は増えない。
+  // 最初は海岸線・県境。日本地図を選んだときだけ地理院へ取りに行く
+  var bgEl = document.querySelector('.bg');
   var attrEl = document.getElementById('attrib');
-  if (baseEl) {
-    baseEl.checked = false;
-    baseEl.addEventListener('change', function () {
-      baseOn = baseEl.checked;
-      if (attrEl) attrEl.hidden = !baseOn;
-      render();
+  var baseNoteEl = document.getElementById('base-note');
+  var BASE_NOTE = {
+    coast: '薄い輪郭は海岸線と県境。<b>その上はすべて交通機関です。</b>',
+    map: '下の地図は地理院タイル。<b>その上はすべて交通機関です。</b>',
+    none: '<b>光っている点と線は、すべて交通機関です。</b>'
+  };
+  function setBackground(v) {
+    on.coast = v === 'coast';
+    baseOn = v === 'map';
+    Array.prototype.forEach.call(bgEl.querySelectorAll('[data-bg]'), function (b) {
+      b.setAttribute('aria-checked', String(b.dataset.bg === v));
     });
+    // 出典は、いま出している背景のものだけ
+    Array.prototype.forEach.call(attrEl.querySelectorAll('[data-bg]'), function (s) {
+      s.hidden = s.dataset.bg !== v;
+    });
+    attrEl.hidden = v === 'none';
+    if (baseNoteEl) baseNoteEl.innerHTML = BASE_NOTE[v];
+    render();
+  }
+  if (bgEl && attrEl) {
+    bgEl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-bg]');
+      if (b) setBackground(b.dataset.bg);
+    });
+    setBackground('coast');
   }
 
   document.getElementById('zin').onclick = function () { zoomAt(W / 2, H / 2, 1.6); };

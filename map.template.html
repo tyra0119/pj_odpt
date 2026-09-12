@@ -145,15 +145,19 @@ dl.tdef dd{margin:0}
   background:rgba(14,23,32,.93); color:var(--ink-2); border:1px solid var(--rule); border-radius:3px;
 }
 .zoom button:hover{color:var(--ink)}
-/* 日本地図の表示。既定では外してある */
-.basemap{
-  display:flex; align-items:center; gap:.4rem; cursor:pointer; user-select:none;
-  font-size:.72rem; color:var(--ink-2); padding:.3rem .55rem;
-  background:rgba(14,23,32,.93); border:1px solid var(--rule); border-radius:3px;
+/* 背景。海岸線・県境／日本地図／なし のどれか1つ */
+.bg{
+  display:flex; overflow:hidden; border-radius:3px;
+  background:rgba(14,23,32,.93); border:1px solid var(--rule);
 }
-.basemap:hover{color:var(--ink)}
-.basemap input{margin:0; width:.85rem; height:.85rem; accent-color:var(--lit); cursor:pointer}
-.basemap:has(input:focus-visible){outline:1px solid var(--ink-2); outline-offset:1px}
+.bg button{
+  font:inherit; font-size:.7rem; padding:.3rem .55rem; cursor:pointer;
+  background:transparent; color:var(--ink-3); border:0; border-left:1px solid var(--rule);
+}
+.bg button:first-child{border-left:0}
+.bg button:hover{color:var(--ink)}
+.bg button[aria-checked="true"]{color:var(--ink); background:rgba(75,219,247,.12)}
+.bg button:focus-visible{outline:1px solid var(--ink-2); outline-offset:-2px}
 /* 出典は見える形で出す決まり。地図の文字と重なっても読めるよう下地を敷く */
 #attrib{margin:0; font-size:.62rem; color:var(--ink-3); text-align:right;
         padding:.1rem .4rem; background:rgba(14,23,32,.88); border-radius:2px}
@@ -194,6 +198,8 @@ dl.tdef dd{margin:0}
 #info .rt-bar{display:flex; height:.4rem; margin:.45rem 0 .3rem; background:var(--rule)}
 #info .rt-bar i{display:block; height:100%}
 #info .rt-nums{margin:0; font-size:.72rem; color:var(--ink-2); line-height:1.6; font-variant-numeric:tabular-nums}
+#info .rt-who{margin:.35rem 0 0; font-size:.72rem; color:var(--ink-2); line-height:1.6}
+#info .rt-who b{color:var(--ink); font-weight:500}
 #info .rt-act{display:flex; gap:.4rem; margin-top:.45rem}
 #info .rt-act button{
   font:inherit; font-size:.7rem; padding:.15rem .6rem; cursor:pointer; border-radius:3px;
@@ -334,7 +340,7 @@ footer b{color:var(--ink-2); font-weight:500}
   </script>
 
   <footer>
-    薄い輪郭は海岸線と県境。<b>その上はすべて交通機関です。</b><br>
+    <span id="base-note">薄い輪郭は海岸線と県境。<b>その上はすべて交通機関です。</b></span><br>
     <span id="legend-foot"></span>沖縄は縮小すると視野に入ります。
   </footer>
 
@@ -345,10 +351,16 @@ footer b{color:var(--ink-2); font-weight:500}
       <button id="zreset" type="button" aria-label="全体表示" style="width:auto;padding:0 .5rem;font-size:.72rem">全体</button>
       <button id="zhelp" type="button" aria-label="この地図の見方">?</button>
     </div>
-    <label class="basemap"><input type="checkbox" id="basemap">日本地図を表示</label>
-    <!-- 地理院タイルは出典の明示が要る。明るさを反転しているので「加工」と書く -->
-    <p id="attrib" hidden><a href="https://maps.gsi.go.jp/development/ichiran.html"
-       target="_blank" rel="noopener">地理院タイル</a>（淡色地図）を加工</p>
+    <!-- 背景はどれか1つ（または無し）。海岸線と地図を重ねても情報は増えない -->
+    <div class="bg" role="radiogroup" aria-label="背景">
+      <button type="button" role="radio" data-bg="coast" aria-checked="true">海岸線・県境</button>
+      <button type="button" role="radio" data-bg="map" aria-checked="false">日本地図</button>
+      <button type="button" role="radio" data-bg="none" aria-checked="false">なし</button>
+    </div>
+    <!-- 出典。地理院タイルは明示が要り、明るさを反転しているので「加工」と書く -->
+    <p id="attrib"><span data-bg="coast">海岸線：国土数値情報 C23 ／ 県境：Natural Earth</span><span
+       data-bg="map" hidden><a href="https://maps.gsi.go.jp/development/ichiran.html"
+       target="_blank" rel="noopener">地理院タイル</a>（淡色地図）を加工</span></p>
   </div>
 
   <div id="info" class="overlay card">
