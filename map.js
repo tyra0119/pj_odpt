@@ -1400,7 +1400,13 @@
       '<span class="badge" style="color:var(--ink-2)">' +
       esc(SEARCH.kindLabel[SEARCH.kinds[i]]) + '</span>' +
       '<dl><dt>' + (SEARCH.kinds[i] === 3 ? '内訳' : '所属') + '</dt><dd>' +
-      esc(SEARCH.subtab[SEARCH.subs[i]]) + '</dd></dl>';
+      esc(SEARCH.subtab[SEARCH.subs[i]]) + '</dd></dl>' +
+      // 観光来訪者数は CC BY。出したところに出典を添える
+      (SEARCH.kinds[i] === 3 && SEARCH.subtab[SEARCH.subs[i]].indexOf('観光来訪者') >= 0
+        ? '<p class="tnote">観光来訪者数は、スマートフォンの位置情報による1年分の推計です' +
+          '（自宅から20km未満の人と通勤・通学は数えません）。観光地点の登録の仕方が自治体で' +
+          '少し違うため、都道府県どうしの比較には注意が要ります。' + esc(SEARCH.credit || '') + '</p>'
+        : '');
   }
   function closeHits() { hitsEl.classList.remove('open'); hitAt = -1; }
 
