@@ -840,8 +840,38 @@
     return LINKS_WAIT;
   }
 
+  function dsList(head, ids, tab) {
+    return '<div class="ds"><p>' + head + '</p>' +
+      ids.map(function (i) {
+        var d = tab[i];
+        return '<a href="' + CKAN + encodeURIComponent(d[1]) + '" target="_blank" rel="noopener">' +
+               esc(d[0]) + '</a>' + (d[2] ? '<em>期間限定</em>' : '');
+      }).join('<br>') + '</div>';
+  }
+
+  // フェリー・デマンド交通・シェアサイクルは、点を作った時点でデータセットが分かっている。
+  // 地図に埋め込んであるので、読み込みを待たずに出せる
+  var LAYERLINKS = (function () {
+    var el = document.getElementById('layerlinks');
+    try { return el ? JSON.parse(el.textContent) : null; } catch (e) { return null; }
+  })();
+  var RANK_NO = { '通年オープン': '0', '期間限定': '1', 'ODPT外にあり': '2', 'データなし': '3' };
+  var LAYER_HEAD = {
+    ferry: 'この港を光らせているデータ（ODPT のカタログ）',
+    demand: 'この地点を光らせているデータ（ODPT のカタログ）',
+    cycle: 'このポートを光らせているデータ（ODPT のカタログ）'
+  };
+
   function linkBlock(pt) {
-    if (pt.mode !== 'bus' || (pt.status !== '通年オープン' && pt.status !== '期間限定')) return '';
+    if (pt.status !== '通年オープン' && pt.status !== '期間限定') return '';
+    if (pt.mode !== 'bus') {
+      if (!LAYERLINKS || !LAYERLINKS.of[pt.mode]) return '';
+      var row = LAYERLINKS.of[pt.mode][RANK_NO[pt.status]];
+      var lids = row && row[pt.idx];
+      if (!lids || !lids.length) return '';
+      return dsList(LAYER_HEAD[pt.mode] || 'この点を光らせているデータ（ODPT のカタログ）',
+                    lids, LAYERLINKS.ds);
+    }
     if (!LINKS) {
       loadLinks().then(function () {
         // 読み終えたときに同じ停留所を見ていたら、出し直す
@@ -858,12 +888,7 @@
       ? 'この停留所の事業者のデータ（ODPT のカタログ）<br>' +
         'この停留所が入っているかまでは確かめていません'
       : 'この停留所を光らせているデータ（ODPT のカタログ）';
-    return '<div class="ds"><p>' + head + '</p>' +
-      ids.map(function (i) {
-        var d = LINKS.ds[i];
-        return '<a href="' + CKAN + encodeURIComponent(d[1]) + '" target="_blank" rel="noopener">' +
-               esc(d[0]) + '</a>' + (d[2] ? '<em>期間限定</em>' : '');
-      }).join('<br>') + '</div>';
+    return dsList(head, ids, LINKS.ds);
   }
 
   function showPointInfo(pt) {
