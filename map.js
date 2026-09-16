@@ -790,6 +790,15 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
+  // **押したものは留める。** カーソルを動かしても閉じない。
+  // 留めないと、情報欄のリンクを押しに行く間に消えてしまう
+  var pinned = null, pinnedRail = null;
+  function unpin() { pinned = null; pinnedRail = null; }
+  function addPinFooter() {
+    info.insertAdjacentHTML('beforeend',
+      '<div class="rt-act"><button type="button" data-act="unpin">閉じる</button></div>');
+  }
+
   function showInfo(f) {
     if (!f) { info.innerHTML = HINT; return; }
     var p = f.p, extra = '';
@@ -840,13 +849,34 @@
     return LINKS_WAIT;
   }
 
-  function dsList(head, ids, tab) {
+  function linkList(head, items) {
     return '<div class="ds"><p>' + head + '</p>' +
-      ids.map(function (i) {
-        var d = tab[i];
-        return '<a href="' + CKAN + encodeURIComponent(d[1]) + '" target="_blank" rel="noopener">' +
-               esc(d[0]) + '</a>' + (d[2] ? '<em>期間限定</em>' : '');
+      items.map(function (d) {
+        return '<a href="' + d[1] + '" target="_blank" rel="noopener">' + esc(d[0]) + '</a>' +
+               (d[2] ? '<em>期間限定</em>' : '');
       }).join('<br>') + '</div>';
+  }
+
+  function dsList(head, ids, tab) {
+    return linkList(head, ids.map(function (i) {
+      return [tab[i][0], CKAN + encodeURIComponent(tab[i][1]), tab[i][2]];
+    }));
+  }
+
+  // ほこナビ・PLATEAU は、点そのものがデータセット単位。元データのページへ直に繋ぐ
+  var EXTRA_DS_HEAD = {
+    hokonavi: 'この点のデータセット（ほこナビ）',
+    plateau: 'この地域のデータ（G空間情報センター）'
+  };
+
+  function extraLinks(pt) {
+    var E = EXTRA[pt.mode];
+    if (!E || !E.ds || !E.dstab) return '';
+    var ids = E.ds[pt.idx];
+    if (!ids || !ids.length) return '';
+    return linkList(EXTRA_DS_HEAD[pt.mode] || '元データ', ids.map(function (i) {
+      return E.dstab[i];
+    }));
   }
 
   // フェリー・デマンド交通・シェアサイクルは、点を作った時点でデータセットが分かっている。
@@ -857,6 +887,7 @@
   })();
   var RANK_NO = { '通年オープン': '0', '期間限定': '1', 'ODPT外にあり': '2', 'データなし': '3' };
   var LAYER_HEAD = {
+    air: 'この空港の便が載っているデータ（ODPT のカタログ）',
     ferry: 'この港を光らせているデータ（ODPT のカタログ）',
     demand: 'この地点を光らせているデータ（ODPT のカタログ）',
     cycle: 'このポートを光らせているデータ（ODPT のカタログ）'
@@ -934,7 +965,8 @@
         '<dl><dt>種類</dt><dd>' + esc(sub || EXTRA[pt.mode].label) + '</dd>' +
         '<dt>公開範囲</dt><dd class="mono">' +
         EXTRA[pt.mode].count.toLocaleString('ja-JP') + ' ' +
-        esc(EXTRA[pt.mode].unit) + '</dd></dl>';
+        esc(EXTRA[pt.mode].unit) + '</dd></dl>' +
+        extraLinks(pt);
       return;
     }
     info.innerHTML =
@@ -1130,13 +1162,22 @@
 
   info.addEventListener('click', function (e) {
     var b = e.target.closest('button');
-    if (!b || !sel) return;
+    if (!b) return;
+    if (b.dataset.act === 'unpin') {
+      unpin();
+      clearRoute();
+      showInfo(null);
+      return;
+    }
+    if (!sel) return;
     if (b.dataset.k != null) { setRoute(+b.dataset.k); return; }
     if (b.dataset.act === 'close') { clearRoute(); showInfo(null); return; }
     if (b.dataset.act === 'fit' && sel.bb) fitBox(sel.bb);
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape' || !sel || document.activeElement === qEl) return;
+    if (e.key !== 'Escape' || document.activeElement === qEl) return;
+    if (!sel && !pinned && !pinnedRail) return;
+    unpin();
     clearRoute();
     showInfo(null);
   });
@@ -1330,9 +1371,9 @@
       render();
       return;
     }
-    // 系統を選んでいる間は、ホバーで情報欄を書き換えない。
-    // 書き換えると、系統の内訳を読んだりボタンを押したりする前に消えてしまう
-    if (sel) return;
+    // 系統を選んでいる間と、押して留めている間は、ホバーで情報欄を書き換えない。
+    // 書き換えると、内訳を読んだりリンクを押したりする前に消えてしまう
+    if (sel || pinned || pinnedRail) return;
     var r = cv.getBoundingClientRect();
     var px = e.clientX - r.left, py = e.clientY - r.top;
     var f = on.rail ? pick(px, py) : null;
@@ -1374,6 +1415,7 @@
     // 鉄道を先に見る。これまでどおり、線の上を押したら路線の情報を出す
     var f = on.rail ? pick(px, py, touch ? TOUCH_TOL : 7) : null;
     var pt = f ? null : pickPoint(px, py, touch ? TOUCH_TOL : 8);
+    unpin();
     // バス停を押したら、その系統を光らせる。マウスでも指でも同じ
     if (pt && pt.mode === 'bus') {
       if (hover) setHover(null);
@@ -1384,13 +1426,28 @@
       return;
     }
     // それ以外を押したら、系統の選択は外す
-    if (sel) { clearRoute(); showInfo(null); }
-    if (!touch) return;                    // マウスはホバーで足りている
-    if (f) { setHover(f); showInfo(f); render(); return; }
+    if (sel) clearRoute();
+    // **押した点は留める。** カーソルを動かしても消えないので、リンクを押しに行ける
+    if (pt) {
+      if (hover) { setHover(null); render(); }
+      hoverPt = pt;
+      hoverPtKey = pt.mode + pt.status + pt.name;
+      pinned = pt;
+      showPointInfo(pt);
+      addPinFooter();
+      return;
+    }
+    if (f) {
+      setHover(f);
+      pinnedRail = f;
+      showInfo(f);
+      addPinFooter();
+      render();
+      return;
+    }
+    // 何も無い所を押したら閉じる
     if (hover) { setHover(null); render(); }
-    hoverPt = pt;
-    hoverPtKey = pt ? pt.mode + pt.status + pt.name : null;
-    showPointInfo(pt);
+    showInfo(null);
   });
   cv.addEventListener('pointercancel', function (e) { liftFinger(e); tap = null; });
   cv.addEventListener('pointerleave', function () {
@@ -1398,8 +1455,8 @@
     if (hover) { setHover(null); render(); }
     hoverPt = null;
     hoverPtKey = null;
-    // 系統を選んでいる間は残す。情報欄のボタンへ移るときにもここを通る
-    if (!sel) showInfo(null);
+    // 系統を選んでいる間と、押して留めている間は残す。情報欄のボタンへ移るときにもここを通る
+    if (!sel && !pinned && !pinnedRail) showInfo(null);
   });
   cv.addEventListener('wheel', function (e) {
     e.preventDefault();
@@ -1469,7 +1526,8 @@
       view.k = Math.max(view.k, baseScale() * 26); // 街の形が見える程度まで寄る
     }
     closeIntro();
-    clearRoute();              // 探したものを出すので、選んでいた系統は外す
+    unpin();                   // 探したものを出すので、留めていたものは外す
+    clearRoute();              // 選んでいた系統も外す
     showFound(i);
     render();
   }
