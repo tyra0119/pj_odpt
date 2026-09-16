@@ -812,8 +812,63 @@
 
   var MODE_LABEL = {};
 
+  // ── データセットへのリンク ────────────────────────────────
+  // ODPT（通年・期間限定）で光っている停留所から、**その光らせたデータのページへ辿れるようにする。**
+  // どのデータで光ったかは tools/build_links.py が位置と事業者で決めている。
+  // データ（約1MB）は、ODPT の停留所を最初に見たときに読む。
+  var LINKS = null, LINKS_WAIT = null, lastPt = null;
+  var CKAN = 'https://ckan.odpt.org/dataset/';
+
+  function loadLinks() {
+    if (LINKS) return Promise.resolve(LINKS);
+    if (LINKS_WAIT) return LINKS_WAIT;
+    LINKS_WAIT = fetch('links.json').then(function (res) {
+      if (!res.ok) throw new Error('links.json ' + res.status);
+      return res.json();
+    }).then(function (d) {
+      if (d.n !== BUS_N) throw new Error('links.json の停留所数が地図と違う');
+      var at = {}, by = {}, g = 0;
+      for (var i = 0; i < d.g.length; i++) {
+        g += d.g[i];
+        at[g] = d.of[i];
+        by[g] = d.by[i];      // 1=位置で辿った 2=事業者から辿った
+      }
+      LINKS = { ds: d.ds, at: at, by: by };
+      return LINKS;
+    });
+    LINKS_WAIT.catch(function () { LINKS_WAIT = null; });
+    return LINKS_WAIT;
+  }
+
+  function linkBlock(pt) {
+    if (pt.mode !== 'bus' || (pt.status !== '通年オープン' && pt.status !== '期間限定')) return '';
+    if (!LINKS) {
+      loadLinks().then(function () {
+        // 読み終えたときに同じ停留所を見ていたら、出し直す
+        if (sel) showRoute();
+        else if (lastPt) showPointInfo(lastPt);
+      }, function (err) { console.error('データセットを読み込めない:', err); });
+      return '<div class="ds"><p>この停留所のデータセットを読み込んでいます…</p></div>';
+    }
+    var g = BUS_OFF[pt.status] + pt.idx;
+    var ids = LINKS.at[g];
+    if (!ids || !ids.length) return '';
+    // **辿り方で言えることが違う。** 位置で辿ったものだけ「この停留所を光らせている」と言える
+    var head = LINKS.by[g] === 2
+      ? 'この停留所の事業者のデータ（ODPT のカタログ）<br>' +
+        'この停留所が入っているかまでは確かめていません'
+      : 'この停留所を光らせているデータ（ODPT のカタログ）';
+    return '<div class="ds"><p>' + head + '</p>' +
+      ids.map(function (i) {
+        var d = LINKS.ds[i];
+        return '<a href="' + CKAN + encodeURIComponent(d[1]) + '" target="_blank" rel="noopener">' +
+               esc(d[0]) + '</a>' + (d[2] ? '<em>期間限定</em>' : '');
+      }).join('<br>') + '</div>';
+  }
+
   function showPointInfo(pt) {
     if (!pt) { showInfo(null); return; }
+    lastPt = pt;
     var parts = (pt.name || '').split('｜');
     var head = parts[0] || MODE_LABEL[pt.mode] || '';
     var sub = parts.slice(1).filter(Boolean).join(' / ');
@@ -862,7 +917,8 @@
       '<span class="badge" style="color:' + HEX[pt.status] + '">' +
       esc(LABEL[pt.status]) + '</span>' +
       '<dl><dt>交通機関</dt><dd>' + esc(MODE_LABEL[pt.mode]) + '</dd>' +
-      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>';
+      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>' +
+      linkBlock(pt);
   }
 
   // ── 系統 ────────────────────────────────────────────────
