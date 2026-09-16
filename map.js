@@ -369,6 +369,25 @@
       PT_DATA[id][st] = { xy: a, names: (L.names && L.names[k]) || [] };
     });
   });
+
+  // **レイヤーごとに母集団が違う。** バスは国土数値情報 P11 が先にあり、
+  // デマンド交通・フェリーはデータの側から点を作っている。振り分けは名前の語で、
+  // 地点そのものの性質ではない。そのため同じ場所が両方で光る。
+  // 数は足し合わせていないが、画面では別々のものに見えるので、重なりに印を付ける
+  var NEARBUS = {};
+  ['ferry', 'demand'].forEach(function (id) {
+    var L = LAYERS[id];
+    if (!L || !L.nearbus) return;
+    NEARBUS[id] = {};
+    Object.keys(L.nearbus).forEach(function (k) {
+      var set = NEARBUS[id][RANK_KEY[k]] = {};
+      L.nearbus[k].forEach(function (i) { set[i] = 1; });
+    });
+  });
+  function nearBus(pt) {
+    var m = NEARBUS[pt.mode];
+    return !!(m && m[pt.status] && m[pt.status][pt.idx]);
+  }
   Object.keys(BUSPTS).forEach(function (st) {
     if (BUSPTS[st].length) PT_DATA.bus[st] = { xy: BUSPTS[st], names: BUS_NAMES[st] || [] };
   });
@@ -996,7 +1015,11 @@
       '<span class="badge" style="color:' + HEX[pt.status] + '">' +
       esc(LABEL[pt.status]) + '</span>' +
       '<dl><dt>交通機関</dt><dd>' + esc(MODE_LABEL[pt.mode]) + '</dd>' +
-      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') + '</dl>' +
+      (sub ? '<dt>事業者</dt><dd>' + esc(sub) + '</dd>' : '') +
+      (nearBus(pt)
+        ? '<dt>同じ場所</dt><dd>100m以内にバス停もあります（国土数値情報 P11）。' +
+          'バスの層でも別に数えています</dd>'
+        : '') + '</dl>' +
       linkBlock(pt);
   }
 
@@ -1325,10 +1348,23 @@
     + 'P12 は入込客数を持たないので、人気の大小までは分かりません。'
     + (SPOT_NOTE ? SPOT_NOTE : '');
 
+  // 重なりの数は data から作る。ここに書くとすぐ食い違うため
+  var ovl = ['demand', 'ferry'].filter(function (id) {
+    return LAYERS[id] && LAYERS[id].nearbus_n;
+  }).map(function (id) {
+    var L = LAYERS[id], n = 0;
+    Object.keys(L.pts).forEach(function (k) { n += L.pts[k].length / 2; });
+    return L.label + fmt(n) + L.unit + 'のうち' + fmt(L.nearbus_n);
+  }).join('、');
+
   document.getElementById('legend-foot').textContent =
     '数字は左から ODPT ／ ODPT（期間限定）／ ODPT外 ／ なし。帯はその割合。'
     + '右肩は、鉄道・バス・航空は全国の母集団、シェアサイクル・フェリー・'
-    + 'デマンド交通は全国一覧が無いため確認できた分の合計です。';
+    + 'デマンド交通は全国一覧が無いため確認できた分の合計です。'
+    + (ovl ? 'デマンド交通とフェリーは全国一覧が無いぶん、データの側から点を作っています。'
+           + 'そのため' + ovl + 'は、バス停と同じ場所（100m以内）を指しています。'
+           + '母集団が別なので数は足し合わせていません。該当する地点は情報欄にそう出ます。'
+      : '');
 
   // ── 操作 ────────────────────────────────────────────────
   var drag = null;

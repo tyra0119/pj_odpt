@@ -173,7 +173,7 @@ footer{
 <span class="sec-no">02 — 二種類</span>
 <h2>場所を選ぶデータと、選ばないデータ</h2>
 <p>公開されているデータは、性質が二つに割れる。<strong>どこにあるかが問題になるもの</strong>と、<strong>全国どこでも同じように使えるもの</strong>である。この地図が扱えるのは前者だけで、後者は白地図にならない。</p>
-<div class="tw"><table><thead><tr><th>データ</th><th>地域の広がり</th><th>測った値</th></tr></thead><tbody><tr><td><strong>公共交通オープンデータセンター</strong></td><td>偏りが大きい</td><td>鉄道 22県 ／ バス 36県</td></tr><tr><td><strong>GTFSデータリポジトリ</strong></td><td>バスは全国</td><td>バス 47都道府県すべて</td></tr><tr><td><strong>ほこナビ</strong></td><td>極端に偏る</td><td>31件中 24件が東京・神奈川</td></tr><tr><td><strong>PLATEAU</strong></td><td>全国に散る</td><td>307地域 ／ 45都道府県</td></tr><tr><td><strong>Project LINKS</strong></td><td>行政情報のため場所の軸を持たない</td><td>—</td></tr><tr><td><strong>連携先（e-Stat・気象庁・警察庁・国土地理院）</strong></td><td>全国一律</td><td>地域差なし</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>データ</th><th>地域の広がり</th><th>測った値</th></tr></thead><tbody><tr><td><strong>公共交通オープンデータセンター</strong></td><td>偏りが大きい</td><td>鉄道 22県 ／ バス 38県</td></tr><tr><td><strong>GTFSデータリポジトリ</strong></td><td>バスは全国</td><td>バス 47都道府県すべて</td></tr><tr><td><strong>ほこナビ</strong></td><td>極端に偏る</td><td>31件中 24件が東京・神奈川</td></tr><tr><td><strong>PLATEAU</strong></td><td>全国に散る</td><td>307地域 ／ 45都道府県</td></tr><tr><td><strong>Project LINKS</strong></td><td>行政情報のため場所の軸を持たない</td><td>—</td></tr><tr><td><strong>連携先（e-Stat・気象庁・警察庁・国土地理院）</strong></td><td>全国一律</td><td>地域差なし</td></tr></tbody></table></div>
 <div class="note"><p>だから<strong>「データが無いから何も作れない」は言い過ぎ</strong>になる。全国一律のデータはどこでも使えるし、バスは47都道府県すべてにある。問題は<strong>作れるものの種類が場所によって変わる</strong>ことである。</p></div>
 </section>
 <section class="wrap">
@@ -182,15 +182,16 @@ footer{
 <p>必須要件は6モードを名指ししている。その各々について、1件でもオープンデータがある都道府県を数えた。</p>
 <div class="tw"><table><thead><tr><th>モード</th><th class="n">ODPT 通年</th><th class="n">ODPT外を含む</th><th class="n">人口カバー率</th></tr></thead><tbody>
 <tr><td>鉄道</td><td class="n">22県</td><td class="n">27県</td><td class="n">19.6%</td></tr>
-<tr><td>バス</td><td class="n">36県</td><td class="n">47県</td><td class="n">25.1%</td></tr>
-<tr class="low"><td>デマンド交通</td><td class="n">1県</td><td class="n">9県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
+<tr><td>バス</td><td class="n">38県</td><td class="n">47県</td><td class="n">25.3%</td></tr>
+<tr><td>デマンド交通</td><td class="n">8県</td><td class="n">11県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
 <tr><td>フェリー</td><td class="n">20県</td><td class="n">23県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
 <tr><td>航空</td><td class="n">35県</td><td class="n">35県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
 <tr><td>シェアサイクル</td><td class="n">38県</td><td class="n">39県</td><td class="n"><span class='na'>母集団なし</span></td></tr>
 </tbody></table></div>
-<div class="note"><p><strong>県の数と、人口カバー率は別の話である。</strong>バスのオープンデータは47都道府県すべてにあるが、人口で見ると届いているのは<strong>25.1%</strong>にすぎない。1件でもあればその県は「ある」に数えられるからで、県数だけを見ると実態を大きく取り違える。</p></div>
+<div class="note"><p><strong>県の数と、人口カバー率は別の話である。</strong>バスのオープンデータは47都道府県すべてにあるが、人口で見ると届いているのは<strong>25.3%</strong>にすぎない。1件でもあればその県は「ある」に数えられるからで、県数だけを見ると実態を大きく取り違える。</p></div>
 <p class="fine">人口カバー率は、鉄道は駅から1000m、バスはバス停から300m の圏内人口（2020年推計）。通年オープンと ODPT外にあり の合計で、期間限定は含めない。残り4モードは全国の母集団が無いため割合を出せない。</p>
-<p>県数が際立って低いのは、デマンド交通である。<strong>デマンド交通は、ODPT に通年で置かれているのが群馬県の139件だけ</strong>である。同じデマンド交通が <span class='mono'>gtfs-data.jp</span> には 2,579件ある。18倍以上の開きがある。</p>
+<p>デマンド交通は、ODPT に通年で置かれているのが青森県、群馬県、埼玉県、東京都、福井県、長野県、和歌山県、福岡県の5,224地点。同じデマンド交通が <span class='mono'>gtfs-data.jp</span> には 2,455地点ある。</p>
+<div class="note"><p><strong>デマンド交通は、この資料の前の版で誤っていた。</strong>「ODPT にあるのは1県139件だけ」と書いていたが、これは<strong>取り込み側の誤り</strong>で、実際には8都県・5,224地点ある。原因は2つ。データセットの棚卸しが古く、当時「公開終了」だったものが再び公開されていたこと。もう一つは、デマンド交通が <span class='mono'>GTFS-Flex</span> で配られており、その中の <span class='mono'>location_group_stops.txt</span> を <span class='mono'>stops.txt</span> と取り違えて読んでいたこと（前者に座標は無い）。2026-09-16 に測り直した。</p></div>
 <div class="note"><p><strong>航空は、この資料の前の版で誤っていた。</strong>「ODPT が発着情報を持つのは羽田・成田の2空港だけ」と書いていたが、それは空港名を決め打ちした判定によるもので、実データと食い違っていた。空港ごとに ODPT へ問い合わせて測り直すと、母集団108件のうち<strong>88件に通年のフライト時刻表がある</strong>（日本航空・全日本空輸）。35都道府県に及ぶ。残る20件は離島や小規模の飛行場が中心である。（2026-09-16 訂正）</p></div>
 </section>
 <section class="wrap">
@@ -202,7 +203,7 @@ footer{
 <div class="bar b-repo"><div class="lab">リポジトリを足して作れる</div><div class="track"><span style="width:8.7%"></span></div><div class="val"><b>8県</b><em>1,095万人・8.7%</em></div></div>
 <div class="bar b-none"><div class="lab">鉄道とバスが揃わない</div><div class="track"><span style="width:29.4%"></span></div><div class="val"><b>20県</b><em>3,686万人・29.4%</em></div></div>
 </div>
-<p class="fine">帯の人口は<strong>その県に住む人の数</strong>であって、その全員にデータが届くという意味ではない。実際に届いている割合は前節のとおり、鉄道 19.6%、バス 25.1%。</p>
+<p class="fine">帯の人口は<strong>その県に住む人の数</strong>であって、その全員にデータが届くという意味ではない。実際に届いている割合は前節のとおり、鉄道 19.6%、バス 25.3%。</p>
 <p>ODPT だけなら <strong>19県</strong>。そこに GTFSデータリポジトリを足すと <strong>27県</strong>になる。増える8県は岩手県、福島県、富山県、岐阜県、三重県、徳島県、高知県、熊本県。<strong>必須要件がリポジトリを含めていることは、確かに効いている。</strong></p>
 <div class="note"><p><strong>20県・3,686万人（全国の29.4%）</strong>では、鉄道とバスが揃わない。<strong>ここで作れるものが無いという意味ではない。</strong>揃っていない組み合わせが1つある、というだけである。他の題材なら作れるし、鉄道側が1つ入れば揃う。次の節に続く。</p></div>
 <h3>足りない側は、全部おなじだった</h3>
@@ -210,7 +211,7 @@ footer{
 <div class="tw"><table><thead><tr><th>県</th><th class="n">人口</th><th class="n">データの無い鉄道路線</th><th class="n">その駅数</th><th class="n">使えるバス停</th><th class="n">PLATEAU</th><th class="n">ほこナビ</th></tr></thead><tbody>
 <tr><td>兵庫県</td><td class="n">544万人</td><td class="n">40</td><td class="n">667</td><td class="n">3,130</td><td class="n">5</td><td class="n">1</td></tr>
 <tr><td>北海道</td><td class="n">522万人</td><td class="n">26</td><td class="n">462</td><td class="n">1,009</td><td class="n">3</td><td class="n">—</td></tr>
-<tr><td>福岡県</td><td class="n">509万人</td><td class="n">28</td><td class="n">600</td><td class="n">2,290</td><td class="n">9</td><td class="n">—</td></tr>
+<tr><td>福岡県</td><td class="n">509万人</td><td class="n">28</td><td class="n">600</td><td class="n">2,358</td><td class="n">9</td><td class="n">—</td></tr>
 <tr><td>広島県</td><td class="n">282万人</td><td class="n">16</td><td class="n">407</td><td class="n">67</td><td class="n">7</td><td class="n">—</td></tr>
 <tr><td>岡山県</td><td class="n">190万人</td><td class="n">16</td><td class="n">400</td><td class="n">2,119</td><td class="n">5</td><td class="n">—</td></tr>
 <tr><td>鹿児島県</td><td class="n">158万人</td><td class="n">12</td><td class="n">399</td><td class="n">1,210</td><td class="n">1</td><td class="n">—</td></tr>
@@ -223,10 +224,10 @@ footer{
 <tr><td>大分県</td><td class="n">113万人</td><td class="n">5</td><td class="n">212</td><td class="n">561</td><td class="n">2</td><td class="n">—</td></tr>
 <tr><td>宮崎県</td><td class="n">106万人</td><td class="n">5</td><td class="n">187</td><td class="n">8</td><td class="n">1</td><td class="n">—</td></tr>
 <tr><td>香川県</td><td class="n">98万人</td><td class="n">7</td><td class="n">171</td><td class="n">1,043</td><td class="n">2</td><td class="n">1</td></tr>
-<tr><td>和歌山県</td><td class="n">93万人</td><td class="n">12</td><td class="n">292</td><td class="n">1,797</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>和歌山県</td><td class="n">93万人</td><td class="n">12</td><td class="n">292</td><td class="n">1,802</td><td class="n">3</td><td class="n">—</td></tr>
 <tr><td>佐賀県</td><td class="n">82万人</td><td class="n">10</td><td class="n">333</td><td class="n">122</td><td class="n">6</td><td class="n">—</td></tr>
-<tr><td>福井県</td><td class="n">76万人</td><td class="n">9</td><td class="n">161</td><td class="n">1,098</td><td class="n">—</td><td class="n">1</td></tr>
-<tr><td>島根県</td><td class="n">67万人</td><td class="n">4</td><td class="n">73</td><td class="n">708</td><td class="n">3</td><td class="n">—</td></tr>
+<tr><td>福井県</td><td class="n">76万人</td><td class="n">9</td><td class="n">161</td><td class="n">1,376</td><td class="n">—</td><td class="n">1</td></tr>
+<tr><td>島根県</td><td class="n">67万人</td><td class="n">4</td><td class="n">73</td><td class="n">705</td><td class="n">3</td><td class="n">—</td></tr>
 <tr><td>鳥取県</td><td class="n">55万人</td><td class="n">5</td><td class="n">86</td><td class="n">5</td><td class="n">4</td><td class="n">—</td></tr>
 </tbody></table></div>
 <p class="fine">県をまたぐ路線は、通る県それぞれで1本と数えている。全国合計にはならない。<br>「使えるバス停」は件数であって、路線網として足りているかは別問題である。広島県、愛媛県、宮崎県、鳥取県は100件に満たず、鉄道が入っても実用にはならない。</p>
@@ -253,16 +254,16 @@ footer{
 <h3>その816件を、広い順に</h3>
 <p class="prefs" style="gap:.35rem"><span style="border-bottom-color:var(--gap)">知床半島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">天塩川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">石垣島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">サロベツ原野<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">西表島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">慶良間諸島の海岸<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">宮古島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">九十九島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span><span style="border-bottom-color:var(--gap)">裏磐梯湖沼群<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">福島県</small></span><span style="border-bottom-color:var(--gap)">屈斜路湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">支笏湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">洞爺湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">青森県</small></span><span style="border-bottom-color:var(--gap)">浦内川<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">沖縄県</small></span><span style="border-bottom-color:var(--gap)">霧多布湿原<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">北海道</small></span><span style="border-bottom-color:var(--gap)">国立公園十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">十和田湖<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">秋田県</small></span><span style="border-bottom-color:var(--gap)">宇久島<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">長崎県</small></span></p>
 <p><strong>島と、国立公園と、湖。</strong>人が交通手段をいちばん知りたい場所である。地元の人は経路を知っているが、訪れる人は知らない。その差を埋めるのが経路案内の役目だとすれば、必要とされる場所ほどデータが無いことになる。<em>そして、そのほとんどはバスが走っていない場所ではない。</em></p>
-<div class="note"><p>「データあり」901件のうち192件は期間限定だけなので、2027年3月13日に空白側へ移る。</p></div>
+<div class="note"><p>「データあり」901件のうち191件は期間限定だけなので、2027年3月13日に空白側へ移る。</p></div>
 <h3>訪れる人の数と並べる</h3>
 <p>観光資源の件数は、県ごとに収録の細かさがまるで違う（地点の観光資源は新潟県1,913件に対し、千葉県0件）。これでは県をまたいで比べられない。そこで、全国を同じ方法で測った<strong>観光来訪者数</strong>（市区町村別・2025年）を、市区町村ごとのバスのデータと並べた。並べ比べられたのは1,788市区町村。</p>
 <div class="bars">
-<div class="bar b-none"><div class="lab">バスのデータが1件も見つからない（880市区町村）</div><div class="track"><span style="width:28.2%"></span></div><div class="val"><b>28.2%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-none"><div class="lab">バスのデータが1件も見つからない（876市区町村）</div><div class="track"><span style="width:28.0%"></span></div><div class="val"><b>28.0%</b><em>観光来訪者数に占める割合</em></div></div>
 <div class="bar b-low"><div class="lab">データのあるバス停が10%未満（188市区町村）</div><div class="track"><span style="width:21.5%"></span></div><div class="val"><b>21.5%</b><em>観光来訪者数に占める割合</em></div></div>
-<div class="bar b-repo"><div class="lab">データのあるバス停が10〜50%（159市区町村）</div><div class="track"><span style="width:9.5%"></span></div><div class="val"><b>9.5%</b><em>観光来訪者数に占める割合</em></div></div>
-<div class="bar b-odpt"><div class="lab">データのあるバス停が50%以上（561市区町村）</div><div class="track"><span style="width:40.9%"></span></div><div class="val"><b>40.9%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-repo"><div class="lab">データのあるバス停が10〜50%（158市区町村）</div><div class="track"><span style="width:9.4%"></span></div><div class="val"><b>9.4%</b><em>観光来訪者数に占める割合</em></div></div>
+<div class="bar b-odpt"><div class="lab">データのあるバス停が50%以上（566市区町村）</div><div class="track"><span style="width:41.1%"></span></div><div class="val"><b>41.1%</b><em>観光来訪者数に占める割合</em></div></div>
 </div>
-<div class="note" style="border-left-color:var(--accent)"><p>市区町村ごとの観光来訪者数を足すと、<strong>その28.2%は、バスのデータが1件も見つからない880市区町村のもの</strong>である。データのあるバス停が10%未満の市区町村まで含めると49.7%。訪れる人の多い市区町村でも、バスのデータは見つからない。</p></div>
+<div class="note" style="border-left-color:var(--accent)"><p>市区町村ごとの観光来訪者数を足すと、<strong>その28.0%は、バスのデータが1件も見つからない876市区町村のもの</strong>である。データのあるバス停が10%未満の市区町村まで含めると49.5%。訪れる人の多い市区町村でも、バスのデータは見つからない。</p></div>
 <h3>訪れる人が多いのに、バスのデータが1件も見つからない市区町村</h3>
 <p class="prefs" style="gap:.35rem"><span style="border-bottom-color:var(--gap)">大阪府大阪市中央区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">1,246万人</small></span><span style="border-bottom-color:var(--gap)">佐賀県佐賀市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">1,087万人</small></span><span style="border-bottom-color:var(--gap)">愛媛県松山市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">916万人</small></span><span style="border-bottom-color:var(--gap)">愛知県豊橋市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">808万人</small></span><span style="border-bottom-color:var(--gap)">兵庫県三木市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">796万人</small></span><span style="border-bottom-color:var(--gap)">千葉県千葉市美浜区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">791万人</small></span><span style="border-bottom-color:var(--gap)">長崎県長崎市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">645万人</small></span><span style="border-bottom-color:var(--gap)">愛知県名古屋市東区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">619万人</small></span><span style="border-bottom-color:var(--gap)">佐賀県鳥栖市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">595万人</small></span><span style="border-bottom-color:var(--gap)">広島県広島市中区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">585万人</small></span><span style="border-bottom-color:var(--gap)">鳥取県鳥取市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">561万人</small></span><span style="border-bottom-color:var(--gap)">大阪府大阪市西区<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">544万人</small></span><span style="border-bottom-color:var(--gap)">広島県廿日市市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">518万人</small></span><span style="border-bottom-color:var(--gap)">愛媛県今治市<small style="color:var(--ink-3);margin-left:.4rem;font-size:.9em">463万人</small></span></p>
 <p class="fine">この統計の観光地点には、寺社や公園だけでなくスポーツ施設・展示会場・道の駅・高速道路のSA/PA も入る。数え方はスマートフォンの位置情報で、自宅から20km未満の人と通勤・通学は数えない。観光地点の一部は自治体の申出で登録されるため、都道府県どうしの比較には注意が要る。足した値は延べ。<a href="https://www.nihon-kankou.or.jp/home/jigyou/research/d-toukei/">デジタル観光統計オープンデータ</a>（日本観光振興協会）を加工して作成。</p>
@@ -276,7 +277,7 @@ footer{
 <div class="prop"><p class="tag">重なりが一枚足りない場所</p><h3>兵庫県・香川県・福井県——歩行空間データはあるのに、鉄道が無い</h3><p>ほこナビの歩行空間ネットワークは、地方では数えるほどしかない。その少ない地方の例が兵庫県・香川県・福井県にある。ところが同じ県に鉄道のオープンデータが無いため、<strong>駅までの経路と、駅からの移動が、つながらない</strong>。段差を避けた経路案内という、ほこナビが想定するそのままの使い方が、鉄道データ一枚で完成する場所である。</p></div>
 <div class="prop"><p class="tag">組み合わせを変える</p><h3>乗換案内が作れない20県のうち、19県に PLATEAU がある</h3><p>合計63地域。鉄道データが無くても、<strong>バス＋3D都市モデル＋全国一律のデータ</strong>（気象、交通事故統計、メッシュ人口）で組める題材はある。浸水時のバス経路、事故多発地点と停留所の関係、人口減少と路線網の重ね合わせ——いずれも鉄道の時刻表を必要としない。<em>「地方だから作れない」ではなく、「地方で作れるものが違う」。</em></p></div>
 <div class="prop"><p class="tag">観光地の足</p><h3>816の観光エリアは、データが入るだけで案内できる</h3><p>石垣島・西表島・宮古島・慶良間諸島、知床、屈斜路湖、支笏湖、洞爺湖、十和田湖、九十九島——いずれも<strong>バス停は現にある</strong>。無いのは時刻表の機械可読なデータだけである。新しく路線を作る話ではないので、<em>全国でいちばん「あと一歩」が短い場所だと言える。</em>交通そのものが無いのは162件（8.6%）にとどまる。</p></div>
-<div class="prop"><p class="tag">デマンド交通</p><h3>ODPT への集約だけで、1県が9県になる</h3><p>デマンド交通は募集要項が名指ししているモードだが、ODPT に通年で置かれているのは1県だけ。同じデータが <span class='mono'>gtfs-data.jp</span> には 2,579件ある。<strong>新しく作らなくていい。すでにあるものが、片方にしか無い。</strong>集約されれば「交通空白×デマンド交通」という、募集要項が想定するそのままのテーマが成立する。</p></div>
+<div class="prop"><p class="tag">デマンド交通</p><h3>形式が新しいぶん、読み手の側が追いついていない</h3><p>デマンド交通は募集要項が名指ししているモードで、ODPT には8都県・5,224地点が通年で置かれている（<span class='mono'>gtfs-data.jp</span> 側は 2,455地点）。ただし配布形式は <span class='mono'>GTFS-Flex</span> で、<strong>ふつうの GTFS として読むと停留所が1件も取れない。</strong>この地図自身が取り違えていた。データはあるのに使われない、という形の空白がここにある。</p></div>
 <div class="prop"><p class="tag">通年ライセンス</p><h3>中国・四国の鉄道が通年になれば、作品が生き残る</h3><p>7県の鉄道は期間限定にしか無い。ここが通年に変われば、<strong>コンテストで生まれたものがコンテストの後も動き続ける</strong>。審査基準の「社会課題解決への寄与」を実際に果たせるかどうかは、作品の出来より先に、この一点で決まっている県がある。</p></div>
 <div class="prop"><p class="tag">ほこナビ</p><h3>31件のうち24件が東京・神奈川</h3><p>歩行空間のバリアフリー情報は、募集要項が「誰もが自律的に安心して移動できる包摂社会」を掲げて推奨しているデータである。だがその整備は首都圏の駅周辺に集中していて、<strong>地方でバリアフリー経路案内を作ることはできない</strong>。高齢化率が高いのは地方の側なので、必要と供給が逆を向いている。</p></div>
 </div>
@@ -300,7 +301,7 @@ footer{
 <p>できるのは、<strong>今日から測り続けること</strong>だけである。この資料の数字は <a href="data/history.csv">history.csv</a> に日付つきで積んでいく。現在 <strong>1点</strong>。応募までに月一度でも回せば、系列になる。</p>
 <div class="tw"><table><thead><tr><th>いま分かる鮮度</th><th class="n">件数</th></tr></thead><tbody><tr><td>GTFSデータリポジトリのフィード</td><td class="n">603</td></tr><tr><td>うち廃止</td><td class="n">26</td></tr><tr><td>うち有効期限が過ぎている</td><td class="n">50</td></tr></tbody></table></div>
 <p class="fine">廃止されたフィードに属する停留所は282件（全体の0.3%）。つまり<strong>公開されたものは概ね維持されている</strong>。「出しても放置される」という懸念は、少なくとも数の上では起きていない。</p>
-<p>もうひとつ、<strong>未来の時間軸はすでに手元にある</strong>。期間限定のデータが切れる 2027年3月13日である。鉄道は7県が、観光エリアは192件が、その日を境に空白側へ移る。</p>
+<p>もうひとつ、<strong>未来の時間軸はすでに手元にある</strong>。期間限定のデータが切れる 2027年3月13日である。鉄道は7県が、観光エリアは191件が、その日を境に空白側へ移る。</p>
 </section>
 <section class="wrap">
 <span class="sec-no">10 — 読み方</span>
