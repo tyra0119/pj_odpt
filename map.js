@@ -816,7 +816,8 @@
       '<dl><dt>データの所在</dt><dd>' + esc(LABEL[p.s]) + '</dd>' +
       '<dt>運営会社</dt><dd>' + esc(p.op) + '</dd>' +
       '<dt>種別</dt><dd>' + esc(p.k) + '</dd>' +
-      '<dt>駅数</dt><dd class="mono">' + p.n + '</dd>' + extra + '</dl>';
+      '<dt>駅数</dt><dd class="mono">' + p.n + '</dd>' + extra + '</dl>' +
+      railLinks(p);
   }
 
   var MODE_LABEL = {};
@@ -858,9 +859,25 @@
   }
 
   function dsList(head, ids, tab) {
-    return linkList(head, ids.map(function (i) {
-      return [tab[i][0], CKAN + encodeURIComponent(tab[i][1]), tab[i][2]];
-    }));
+    return linkList(head, ids.map(function (i) { return tab[i]; }));
+  }
+
+  // 鉄道は位置で突き合わせられない（API のデータが多い）。路線が持つ ODPT の事業者から引く。
+  // カタログにページが無い事業者もあるので、そのときはその旨を書く
+  var RAILLINKS = (function () {
+    var el = document.getElementById('raillinks');
+    try { return el ? JSON.parse(el.textContent) : null; } catch (e) { return null; }
+  })();
+
+  function railLinks(p) {
+    if (!RAILLINKS || (p.s !== '通年オープン' && p.s !== '期間限定')) return '';
+    var ids = RAILLINKS.of[p.op + '|' + p.line];
+    if (!ids || !ids.length) {
+      return '<div class="ds"><p>ODPT の API にはありますが、' +
+             'カタログにデータセットのページがありません</p></div>';
+    }
+    return linkList('この事業者の鉄道データ（ODPT のカタログ）',
+                    ids.map(function (i) { return RAILLINKS.ds[i]; }));
   }
 
   // ほこナビ・PLATEAU は、点そのものがデータセット単位。元データのページへ直に繋ぐ
@@ -894,7 +911,9 @@
   };
 
   function linkBlock(pt) {
-    if (pt.status !== '通年オープン' && pt.status !== '期間限定') return '';
+    var odpt = pt.status === '通年オープン' || pt.status === '期間限定';
+    // ODPT外（gtfs-data.jp）はバス停だけ辿れる
+    if (!odpt && !(pt.mode === 'bus' && pt.status === 'ODPT外にあり')) return '';
     if (pt.mode !== 'bus') {
       if (!LAYERLINKS || !LAYERLINKS.of[pt.mode]) return '';
       var row = LAYERLINKS.of[pt.mode][RANK_NO[pt.status]];
@@ -915,7 +934,10 @@
     var ids = LINKS.at[g];
     if (!ids || !ids.length) return '';
     // **辿り方で言えることが違う。** 位置で辿ったものだけ「この停留所を光らせている」と言える
-    var head = LINKS.by[g] === 2
+    var by = LINKS.by[g];
+    var head = by === 3
+      ? 'この停留所を光らせているデータ（GTFSデータリポジトリ）'
+      : by === 2
       ? 'この停留所の事業者のデータ（ODPT のカタログ）<br>' +
         'この停留所が入っているかまでは確かめていません'
       : 'この停留所を光らせているデータ（ODPT のカタログ）';
