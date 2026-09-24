@@ -922,6 +922,43 @@
     try { return el ? JSON.parse(el.textContent) : null; } catch (e) { return null; }
   })();
   var RANK_NO = { '通年オープン': '0', '期間限定': '1', 'ODPT外にあり': '2', 'データなし': '3' };
+
+  // デマンド交通（GTFS-Flex）の予約の締め切りと運行時間帯。
+  // 点 → データセット（layerlinks）→ そのフィードの booking_rules / stop_times（flexinfo）と引く。
+  // **書いてあることだけを出す。** 区域の面はどのフィードにも無いので描かない
+  var FLEX = (function () {
+    var el = document.getElementById('flexinfo');
+    try { return el ? JSON.parse(el.textContent) : {}; } catch (e) { return {}; }
+  })();
+  function flexOf(pt) {
+    if (pt.mode !== 'demand' || !LAYERLINKS || !LAYERLINKS.of.demand) return null;
+    var row = LAYERLINKS.of.demand[RANK_NO[pt.status]];
+    var ids = row && row[pt.idx];
+    if (!ids) return null;
+    for (var i = 0; i < ids.length; i++) {
+      var slug = String(LAYERLINKS.ds[ids[i]][1]).split('/').pop();
+      if (FLEX[slug]) return FLEX[slug];
+    }
+    return null;
+  }
+  function flexRows(pt) {
+    var f = flexOf(pt);
+    if (!f) return '';
+    return (f.book ? '<dt>予約</dt><dd>' + esc(f.book) + '</dd>' : '') +
+      (f.hours && f.hours.length
+        ? '<dt>運行</dt><dd>' + f.hours.map(esc).join('<br>') + '</dd>' : '') +
+      (f.tel ? '<dt>電話</dt><dd class="mono">' + esc(f.tel) + '</dd>' : '');
+  }
+  function flexNote(pt) {
+    var f = flexOf(pt);
+    if (!f) return '';
+    return '<p class="tnote">' + (f.msg ? esc(f.msg) + '<br>' : '') +
+      'データセット（GTFS-Flex）に書かれた予約ルールと、便ごとの乗降できる時間帯です。' +
+      '区域や便によって違うことがあります。乗る前に自治体の案内を確かめてください。' +
+      (/^https?:\/\//.test(f.url)
+        ? '<br><a href="' + esc(f.url) + '" target="_blank" rel="noopener">案内のページ</a>' : '') +
+      '</p>';
+  }
   var LAYER_HEAD = {
     air: 'この空港の便が載っているデータ（ODPT のカタログ）',
     ferry: 'この港を光らせているデータ（ODPT のカタログ）',
@@ -1019,7 +1056,8 @@
       (nearBus(pt)
         ? '<dt>同じ場所</dt><dd>100m以内にバス停もあります（国土数値情報 P11）。' +
           'バスの層でも別に数えています</dd>'
-        : '') + '</dl>' +
+        : '') + flexRows(pt) + '</dl>' +
+      flexNote(pt) +
       linkBlock(pt);
   }
 
